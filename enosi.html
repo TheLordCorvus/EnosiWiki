@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Enosi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050817;--panel:#0b1230;--edge:#5f8fd0;--fg:#e6f0ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#050817;--panel:#0b1230;--edge:#5f8fd0;--fg:#e6f0ff}}
+:root[data-theme="dark"]{--bg:#050817;--panel:#0b1230;--edge:#5f8fd0;--fg:#e6f0ff}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);overflow:hidden;max-width:100vw;overscroll-behavior:none}
+canvas{display:block;width:100%;height:100%;max-width:100vw;touch-action:none}
+img{max-width:100%}
+#detail{overflow:hidden}
+.detail-box{max-width:100%;overflow-x:hidden;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--edge) transparent}
+.detail-box::-webkit-scrollbar{width:10px}
+.detail-box::-webkit-scrollbar-track{background:transparent}
+.detail-box::-webkit-scrollbar-thumb{background:rgba(95,143,208,.45);border-radius:999px;border:2px solid rgba(11,18,48,.92)}
+.detail-cols{min-width:0}
+.detail-cols>*{min-width:0;max-width:100%}
+.detail-main textarea,.field input,.detail-img-title input{max-width:100%}
+#info{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(440px,90vw);box-sizing:border-box;padding:12px 18px;text-align:center;background:rgba(11,18,48,.82);border:1px solid var(--edge);border-radius:16px;backdrop-filter:blur(6px)}
+body.wide #info{left:auto;right:24px;bottom:auto;top:50%;transform:translateY(-50%);width:min(320px,26vw)}
+.art{margin-top:10px;width:100%;height:min(200px,22vh);border:1px dashed var(--edge);border-radius:10px;display:grid;place-items:center;overflow:hidden;cursor:pointer;box-sizing:border-box;font:500 15px/1.3 "Cormorant Garamond",Georgia,serif;color:#8fa8d0;background:rgba(95,143,208,.06)}
+.art:has(img){border-style:solid}
+.art img{width:100%;height:100%;object-fit:cover;display:block}
+body.wide .art{height:auto;aspect-ratio:4/3}
+#info .go{display:block;margin-top:6px;font-size:14px;font-style:italic;opacity:.75}
+#info .backbtn{display:inline-block;margin-bottom:8px;padding:6px 12px;background:rgba(95,143,208,.15);color:var(--fg);border:1px solid var(--edge);border-radius:999px;font:700 12px Cinzel,Georgia,serif;letter-spacing:.05em;cursor:pointer}
+#info .addbtn{display:inline-block;margin-bottom:8px;margin-left:6px;padding:6px 12px;background:rgba(61,220,107,.12);color:var(--fg);border:1px solid #3ddc6b;border-radius:999px;font:700 12px Cinzel,Georgia,serif;letter-spacing:.05em;cursor:pointer}
+#info .delbtn{display:inline-block;margin-bottom:8px;margin-left:6px;padding:6px 12px;background:rgba(255,59,59,.12);color:var(--fg);border:1px solid #ff3b3b;border-radius:999px;font:700 12px Cinzel,Georgia,serif;letter-spacing:.05em;cursor:pointer}
+#confirmbox{position:fixed;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
+#confirmbox[hidden]{display:none}
+.confirm-box{width:min(380px,92vw);background:rgba(11,18,48,.95);border:1px solid var(--edge);border-radius:16px;padding:18px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;text-align:center}
+.confirm-box h2{margin:0;font:700 16px Cinzel,Georgia,serif;letter-spacing:.06em}
+.confirm-box p{margin:0;font:500 16px/1.45 "Cormorant Garamond",Georgia,serif}
+#addbox{position:fixed;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
+#addbox[hidden]{display:none}
+.add-form{width:min(380px,92vw);background:rgba(11,18,48,.95);border:1px solid var(--edge);border-radius:16px;padding:18px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+.add-form h2{margin:0;font:700 16px Cinzel,Georgia,serif;letter-spacing:.06em}
+.add-form label{font:700 12px Cinzel,Georgia,serif;letter-spacing:.05em;opacity:.85}
+.add-form input[type=text]{width:100%;background:#070d26;color:var(--fg);border:1px solid var(--edge);border-radius:8px;padding:8px 10px;font:500 15px "Cormorant Garamond",Georgia,serif;box-sizing:border-box}
+.add-colors{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.add-sw{aspect-ratio:1;border-radius:8px;border:2px solid transparent;cursor:pointer;padding:0}
+.add-sw.on{border-color:#fff}
+#info b{display:block;font:700 15px Cinzel,Georgia,serif;letter-spacing:.06em;margin-bottom:4px}
+#info span{font:500 17px/1.35 "Cormorant Garamond",Georgia,serif}
+#detail{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:16px;padding:20px;box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
+#detail[hidden]{display:none}
+#detail [hidden]{display:none!important}
+.detail-main textarea[hidden],.detail-body[hidden]{display:none}
+.detail-box{--glow:#fff;width:min(1200px,94vw);max-height:88vh;overflow-x:hidden;overflow-y:auto;background:rgba(11,18,48,.92);border:1px solid var(--glow);border-radius:16px;padding:18px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:var(--edge) transparent;position:relative;box-shadow:0 0 22px -4px var(--glow),0 0 60px -18px var(--glow);animation:detailPulse 3.2s ease-in-out infinite}
+@keyframes detailPulse{0%,100%{box-shadow:0 0 18px -6px var(--glow),0 0 50px -20px var(--glow)}50%{box-shadow:0 0 28px -2px var(--glow),0 0 70px -14px var(--glow)}}
+.detail-cols{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+.detail-side{display:flex;flex-direction:column;gap:10px;min-width:0;background:rgba(5,8,23,.55);border:1px solid var(--edge);border-radius:12px;padding:14px 16px;box-sizing:border-box}
+@media(max-width:899px){#detail{flex-direction:column;overflow-y:auto;overflow-x:hidden}.detail-cols{grid-template-columns:1fr}}
+.detail-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.detail-head h2{margin:0;font:700 19px Cinzel,Georgia,serif;letter-spacing:.06em}
+.detail-img-title h3{margin:0 0 8px;font:700 19px Cinzel,Georgia,serif;letter-spacing:.05em;text-align:center}
+.detail-img-title input{width:100%;background:#070d26;color:var(--fg);border:1px solid var(--edge);border-radius:8px;padding:6px 10px;font:700 17px Cinzel,Georgia,serif;letter-spacing:.04em;text-align:center;box-sizing:border-box}
+.detail-body{font:500 17px/1.5 "Cormorant Garamond",Georgia,serif;white-space:pre-wrap;overflow:visible}
+.detail-body h2,.detail-body h3,.detail-body h4{font-family:Cinzel,Georgia,serif;margin:.6em 0 .3em;line-height:1.25}
+.detail-body h2{font-size:19px;letter-spacing:.05em}
+.detail-body h3{font-size:17px}
+.detail-body h4{font-size:15px;opacity:.9}
+.detail-body ul{margin:.4em 0 .4em 1.2em;padding:0}
+.detail-body p{margin:.35em 0}
+.detail-body hr{border:0;border-top:1px solid var(--edge);opacity:.6;margin:.7em 0}
+.detail-body img{display:block;width:auto;height:auto;max-width:100%;max-height:min(200px,22vh);object-fit:contain;border-radius:10px;margin:.6em auto}
+.detail-body img.img-L{float:left;margin:.3em .9em .4em 0}
+.detail-body img.img-R{float:right;margin:.3em 0 .4em .9em}
+.detail-body::after{content:'';display:block;clear:both}
+.detail-body:empty::before{content:'Sin texto guardado.';opacity:.6;font-style:italic}
+.detail-preview{border:1px dashed var(--edge);border-radius:10px;padding:10px 12px;max-height:30vh;overflow:auto;background:rgba(5,8,23,.5);font:500 16px/1.5 "Cormorant Garamond",Georgia,serif}
+.detail-preview h2,.detail-preview h3,.detail-preview h4{font-family:Cinzel,Georgia,serif;margin:.5em 0 .25em}
+.detail-body blockquote,.detail-preview blockquote{border-left:3px solid var(--edge);margin:.5em 0;padding:.2em 0 .2em .8em;opacity:.9;font-style:italic}
+.detail-body table,.detail-preview table{border-collapse:collapse;margin:.5em 0;font-size:15px}
+.detail-body th,.detail-body td,.detail-preview th,.detail-preview td{border:1px solid var(--edge);padding:4px 8px;text-align:left}
+.detail-body a,.detail-preview a{color:#9dc0ff}
+#storeMeter{font:500 12px "Cormorant Garamond",Georgia,serif;opacity:.75;align-self:center}
+#detailSaved{color:#3ddc6b;font:700 13px Cinzel,Georgia,serif;align-self:center}
+.detail-main textarea{width:100%;min-height:220px;resize:vertical;background:#070d26;color:var(--fg);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;font:500 16px/1.45 "Cormorant Garamond",Georgia,serif;box-sizing:border-box}
+.detail-main textarea[hidden],.detail-body[hidden]{display:none}
+.detail-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.detail-row button,.detail-head button{padding:8px 14px;background:rgba(95,143,208,.15);color:var(--fg);border:1px solid var(--edge);border-radius:999px;font:700 13px Cinzel,Georgia,serif;cursor:pointer}
+#detailSaved{color:#3ddc6b;font:700 13px Cinzel,Georgia,serif;align-self:center;margin-right:auto}
+.detail-fields{display:grid;gap:14px;margin-top:8px;text-align:left}
+.field{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center}
+.field label{font:700 12px Cinzel,Georgia,serif;letter-spacing:.05em;opacity:.85;text-transform:none}
+.field input{width:100%;background:#070d26;color:var(--fg);border:1px solid var(--edge);border-radius:8px;padding:6px 9px;font:500 14px/1.3 "Cormorant Garamond",Georgia,serif;box-sizing:border-box;text-transform:none}
+.detail-fields-view{display:grid;gap:6px;margin-top:4px;text-align:left}
+.frow{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:baseline}
+.frow b{font:700 12px Cinzel,Georgia,serif;letter-spacing:.05em;opacity:.85;text-transform:none}
+#detailBox[data-view="criaturas"] .frow span{font-size:12px}
+.frow span{font:500 17px/1.4 "Cormorant Garamond",Georgia,serif;letter-spacing:0;opacity:1;text-transform:none}
+@media(max-width:899px){#detail{flex-direction:column;overflow-y:auto;overflow-x:hidden}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="info"><b>Enosi</b><span>Toca una placa del caparazón para explorarla.</span></div>
+<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><button id="detailEdit" type="button">Editar</button></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
+<div id="addbox" hidden><div class="add-form"><h2>Nueva placa</h2><label>Nombre</label><input type="text" id="addName" maxlength="60" placeholder="Nombre del nodo"><label>Color</label><div class="add-colors" id="addColors"></div><label>O personalizado</label><input type="color" id="addCustom" value="#5f8fd0"><div class="detail-row"><button id="addCreate" type="button">Crear</button><button id="addCancel" type="button">Cancelar</button></div></div></div>
+<div id="confirmbox" hidden><div class="confirm-box"><h2 id="confirmTitle">Eliminar</h2><p id="confirmMsg"></p><div class="detail-row" style="justify-content:center"><button id="confirmOk" type="button">Eliminar</button><button id="confirmNo" type="button">Cancelar</button></div></div></div>
+<script>
+// ================= DATOS DE ENOSI (edita solo este bloque) =================
+// Cada vista: {title, nodes:[...]}. Caparazón: h = 0 centro, 1-6 anillo,
+//   anillo doble (rings:2): h 0-18, triple (rings:3): h 0-36.
+// Constelación (layout:'orion'): usa x,y y links:[[a,b],...].
+// Campos por nodo: name, color '#rrggbb', text.
+//   "go:'vista'" abre subvista | "url:'https://…'" abre enlace | "detail:true" abre ficha.
+// NO toques el motor debajo de la línea "---- MOTOR ----" ni reordenes nodos
+// con fichas guardadas (las claves de guardado usan el índice).
+// -----------------------------------------------------------------------------
+const VIEWS={root:{title:'Enosi',nodes:[
+ {name:'Línea Temporal',h:0,color:'#5a5cff',go:'linea',text:'Recorre los eventos transcurridos en Enosi'},
+ {name:'Libro Magnus',h:1,color:'#b45cff',go:'magnus',text:'Lee sobre uno de los personajes de Enosi'},
+ {name:'Planos',h:2,color:'#ff9a1f',go:'planos',text:'Descubre cuáles son los planos que hay en Enosi'},
+ {name:'Elementos',h:3,color:'#ffe135',go:'elementos',text:'Descubre cuáles son los elementos que acompaña un habitante de Enosi'},
+ {name:'Naciones de Enosi',h:4,color:'#3ddc6b',go:'naciones',text:'Descubre las naciones que hay en Enosi'},
+ {name:'Criaturas',h:5,color:'#2ea8ff',go:'criaturas',text:'Descubre cuáles son las criaturas que habitan en Enosi'},
+ {name:'Artefactos',h:6,color:'#ff3b3b',go:'artefactos',text:'Descubre cuáles son los artefactos legendarios que hay en Enosi'}
+]},
+linea:{title:'Línea Temporal',nodes:[
+ {name:'Guerra por la Verdad',h:0,color:'#5a5cff',go:'guerra',text:'Lee sobre los acontecimientos ocurridos durante Guerra por la Verdad'},
+ {name:'Imperio del Dragón',h:1,color:'#ff3b3b',go:'imperio',text:'Lee sobre los acontecimientos ocurridos durante Imperio del Dragón'},
+ {name:'Apocalipsis',h:2,color:'#3ddc6b',go:'apocalipsis',text:'Lee sobre los acontecimientos ocurridos durante Apocalipsis'},
+ {name:'Ocaso del Espíritu',h:3,color:'#ffe135',go:'ocaso',text:'Lee sobre los acontecimientos ocurridos durante Ocaso del Espíritu'},
+ {name:'Nuevo Mundo',h:4,color:'#ff9a1f',go:'nuevomundo',text:'Lee sobre los acontecimientos ocurridos durante Nuevo Mundo'},
+ {name:'Despertar',h:5,color:'#b45cff',go:'despertar',text:'Lee sobre los acontecimientos ocurridos durante Despertar'},
+ {name:'Tormenta',h:6,color:'#2ea8ff',go:'tormenta',text:'Lee sobre los acontecimientos ocurridos durante Tormenta'}
+]},
+guerra:{title:'Guerra por la Verdad',layout:'vacio',nodes:[{name:'Guerra por la Verdad',x:0,y:0,color:'#5a5cff',text:'Lee sobre los acontecimientos ocurridos durante Guerra por la Verdad',detail:true}]},
+imperio:{title:'Imperio del Dragón',layout:'vacio',nodes:[{name:'Imperio del Dragón',x:0,y:0,color:'#ff3b3b',text:'Lee sobre los acontecimientos ocurridos durante Imperio del Dragón',detail:true}]},
+apocalipsis:{title:'Apocalipsis',layout:'vacio',nodes:[{name:'Apocalipsis',x:0,y:0,color:'#3ddc6b',text:'Lee sobre los acontecimientos ocurridos durante Apocalipsis',detail:true}]},
+ocaso:{title:'Ocaso del Espíritu',layout:'vacio',nodes:[{name:'Ocaso del Espíritu',x:0,y:0,color:'#ffe135',text:'Lee sobre los acontecimientos ocurridos durante Ocaso del Espíritu',detail:true}]},
+nuevomundo:{title:'Nuevo Mundo',layout:'vacio',nodes:[{name:'Nuevo Mundo',x:0,y:0,color:'#ff9a1f',text:'Lee sobre los acontecimientos ocurridos durante Nuevo Mundo',detail:true}]},
+despertar:{title:'Despertar',layout:'vacio',nodes:[{name:'Despertar',x:0,y:0,color:'#b45cff',text:'Lee sobre los acontecimientos ocurridos durante Despertar',detail:true}]},
+tormenta:{title:'Tormenta',layout:'vacio',nodes:[{name:'Tormenta',x:0,y:0,color:'#2ea8ff',text:'Lee sobre los acontecimientos ocurridos durante Tormenta',detail:true}]},
+magnus:{title:'Libro Magnus',nodes:[
+ {name:'Héroes de Enosi',h:0,color:'#ff3b3b',go:'heroes',text:'Constelación de El Carro: toca una estrella para explorarla.'},
+ {name:'Oculatus',h:1,color:'#2ea8ff',go:'oculatus',text:'Pentagrama: toca una estrella para explorarla.'},
+ {name:'Primordiales',h:2,color:'#b45cff',go:'primordiales',text:'Descubre a los primordiales de Enosi'},
+ {name:'Ascendidos',h:6,color:'#fff2a8',go:'ascendidos',text:'Descubre a los ascendidos de Enosi'},
+ {name:'Shuilings',h:4,color:'#f2b705',go:'shuilings',text:'Constelación de Orión: toca una estrella para explorarla.'},
+ {name:'Elegidos',h:5,color:'#9aa4b2',go:'cancer',text:'Constelación de Cáncer: toca una estrella para explorarla.'},
+ {name:'Países',h:3,color:'#2ecc71',go:'paises',text:'Caparazón vacío por rellenar.'}
+]},
+cancer:{title:'Elegidos — Cáncer',layout:'orion',scale:.9,zk:1.4,nodes:[
+ {name:'Xingyan',x:-1.8,y:-1.2,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Arik',x:1.6,y:-1.0,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Justiniano',x:0.3,y:0.2,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Khang',x:-0.4,y:1.4,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Kheru',x:1.2,y:1.6,color:'#9aa4b2',text:'Contenido por definir.',detail:true}
+],links:[[0,2],[1,2],[2,3],[2,4]]},
+primordiales:{title:'Primordiales',nodes:[
+ {name:'Serafiel',h:0,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Raguel',h:1,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Paimon',h:3,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Felicur',h:5,color:'#b45cff',text:'Contenido por definir.',detail:true}
+]},
+paises:{title:'Países',rings:9,scale:.17,zk:2,fs:.135,fw:1.4,fmin:7,nodes:[
+ {name:'Nadie',h:0,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Lee',h:7,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Luo',h:8,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Yuan',h:9,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Gui',h:10,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Nuwa',h:11,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Mengyao',h:12,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Lei',h:13,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Shanyuan',h:14,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Mei',h:15,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Liu',h:16,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Guoliang',h:17,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Xiu-Mei',h:18,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Jia',h:19,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Junjie',h:20,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Huan',h:21,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Qi',h:22,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Chen',h:23,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Bao',h:24,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'LeiFei',h:25,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Dú Vòng',h:26,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Xiaoyo',h:27,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Jian',h:28,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Yu Tien',h:29,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Ru Chén',h:30,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Jian Ma',h:31,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Huizang',h:32,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'An Wu',h:33,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Mindeulle',h:34,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Wang',h:35,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Maotou',h:36,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Erlang',h:37,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Yanxing',h:38,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Xiu',h:39,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Jing',h:40,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Nasser',h:91,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Lukman',h:92,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Kephri',h:93,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Ashari',h:94,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Safiya',h:95,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Tuk',h:96,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Suzuki',h:99,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Tojo',h:100,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Honda',h:101,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Yua',h:102,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Kibo',h:103,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Amaterasu',h:104,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Watanabe',h:105,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Itzayana',h:107,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Geneviève',h:108,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Metzli',h:109,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Rayén',h:110,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Enatiuh',h:111,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Jessica S.W',h:114,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Jaden',h:115,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Trevor',h:116,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Thomas',h:117,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Noel',h:118,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Ava',h:119,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Dupont',h:120,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Walt',h:121,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Rén',h:122,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Silver',h:123,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Antonio',h:169,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Klara',h:170,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Nikola',h:171,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Arslan',h:172,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Bre y A',h:173,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Hansjörg',h:174,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Markus',h:175,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Noah',h:255,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Lydia',h:256,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Batbayar',h:257,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Hyun',h:258,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Yinou',h:259,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Zhang',h:260,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Artorius',h:186,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Tayyip',h:187,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Ya\'qub',h:188,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Khidir',h:189,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Usman',h:190,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Ismail',h:191,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Muhammad',h:192,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Mirac',h:193,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Ismet III',h:194,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Doncella',h:195,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Írfan',h:196,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Kerem',h:197,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'Marcus',h:217,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Reidex',h:218,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Enrique',h:219,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Otón',h:220,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Roman',h:221,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Konigreich',h:222,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Scary',h:223,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Abe',h:224,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Christa',h:225,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Armin',h:226,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Milena',h:227,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Lubomir',h:228,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Ida',h:229,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Stronheim',h:230,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Andreu',h:231,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Lena',h:232,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Polo',h:233,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Cortex',h:234,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Acosta',h:235,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Volodia',h:236,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Palom',h:237,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Olimpia',h:238,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Franz',h:239,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Friuli',h:240,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Corin',h:241,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Venator',h:242,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Nismon',h:243,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Katarina',h:244,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Aristeo',h:245,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Aniol',h:246,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Shui K',h:248,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Enviado',h:250,color:'#2ecc71',text:'Contenido por definir.',detail:true}
+]},
+ascendidos:{title:'Ascendidos',rings:7,scale:.22,zk:2,fs:.135,fw:1.4,fmin:7,nodes:[
+ {name:'Glacies',h:155,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Zhao',h:156,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Xiaohu',h:157,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Shui',h:158,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Nicté',h:159,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Xian',h:160,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'R.Timsah',h:161,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Iktan',h:162,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Titus',h:154,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Fenrir',h:115,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Ling',h:113,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Chengy',h:80,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Pelagio',h:53,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Amelia',h:54,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Wei',h:55,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Krethis',h:56,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Ludwig',h:57,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Mariano',h:87,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'J.Timsah',h:123,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Sora',h:165,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Suiji',h:151,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Cody',h:112,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Hana',h:79,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Mao',h:52,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Ji',h:31,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Hiroki',h:152,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Minerva',h:32,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Asim',h:76,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Rhys',h:49,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Thomas',h:28,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Olivia',h:13,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Tyler',h:4,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Don Papi',h:0,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Santo',h:1,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Hao',h:7,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Aymerick',h:148,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Radomir',h:109,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Adal',h:19,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Deniz',h:37,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Soñadora',h:61,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Arthur',h:91,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Shaoran',h:127,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Sobek',h:21,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Shu',h:146,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Yan Yàng',h:107,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Astrid',h:74,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Eefje',h:47,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Naunet',h:26,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Tariq',h:11,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'A.Timsah',h:10,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Sadiki',h:9,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Tianshan',h:144,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Andrej',h:105,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'I.Timsah',h:72,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Feu',h:45,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Ignis',h:44,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Khalid',h:43,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Marte',h:42,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Balam',h:102,color:'#39ff14',nolinkUp:true,text:'Contenido por definir.',detail:true}
+]},
+heroes:{title:'Héroes de Enosi — El Carro',layout:'orion',scale:.9,zk:1.4,nodes:[
+ {name:'Nuo',x:-2.5,y:-1.0,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Tebengri',x:-2.2,y:0.8,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Gao',x:-0.2,y:0.6,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Xian',x:0.0,y:-0.6,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Chun',x:1.8,y:-0.5,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Octavio',x:3.0,y:0.2,color:'#ff3b3b',text:'Contenido por definir.',detail:true}
+],links:[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5]]},
+oculatus:{title:'Oculatus — Pentagrama',layout:'orion',scale:.9,zk:1.4,nodes:[
+ {name:'Sheng',x:0,y:-2.2,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Auriel',x:2.09,y:-0.68,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Ismet',x:1.29,y:1.78,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Semut',x:-1.29,y:1.78,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Jae',x:-2.09,y:-0.68,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Radomir',x:0,y:0,color:'#ffffff',text:'Frase por poner',detail:true}
+],links:[[0,2],[2,4],[4,1],[1,3],[3,0],[5,0],[5,1],[5,2],[5,3],[5,4]]},
+shuilings:{title:'Shuilings — Orión',layout:'orion',scale:.9,zk:1.4,nodes:[
+ {name:'Heian',x:-0.2,y:-2.8,color:'#f2b705',text:'Contenido por definir.',detail:true},
+ {name:'Cooper',x:0.8,y:-0.8,color:'#f2b705',text:'Contenido por definir.',detail:true},
+ {name:'Alnur',x:1.8,y:0.8,color:'#f2b705',text:'Contenido por definir.',detail:true},
+ {name:'Kaito',x:0.2,y:2.2,color:'#f2b705',text:'Contenido por definir.',detail:true},
+ {name:'Kylin',x:-1.0,y:0.6,color:'#f2b705',text:'Contenido por definir.',detail:true}
+],links:[[0,1],[1,2],[2,3],[3,4],[4,1]]},
+planos:{title:'Planos',nodes:[
+ {name:'Magnus File',h:6,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Inmortalis',h:1,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Erebo',h:2,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'Spes',h:3,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Memento',h:4,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Tiamat',h:5,color:'#3ddc6b',text:'Contenido por definir.',detail:true}
+]},
+elementos:{title:'Elementos',rings:2,scale:.66,zk:2,nodes:[
+ {name:'Espíritu',h:0,color:'#eaf2ff',text:'Contenido por definir.',detail:true},
+ {name:'Pactos',h:3,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Inversa',h:6,color:'#86ff30',text:'Contenido por definir.',detail:true},
+ {name:'Fuego',h:7,color:'#ff3b3b',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Aire',h:8,color:'#b8dcff',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Tierra',h:9,color:'#a86a2e',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Agua',h:10,color:'#2ea8ff',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Lava',h:11,color:'#ff6a00',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Rayo',h:12,color:'#d6e9ff',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Hierro',h:13,color:'#9aa4b2',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Luz',h:14,color:'#fff2a8',text:'Contenido por definir.',detail:true},
+ {name:'Sombra',h:15,color:'#6a4bb5',text:'Contenido por definir.',detail:true},
+ {name:'Veneno',h:16,color:'#5aff2e',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Arena',h:17,color:'#e8c66a',text:'Contenido por definir.',cats:['ascension'],detail:true},
+ {name:'Sin Espíritu',h:18,color:'#ff2e7e',text:'Contenido por definir.',detail:true}
+]},
+criaturas:{title:'Criaturas',rings:3,scale:.45,zk:2,nodes:[
+ {name:'Dragones',h:0,color:'#ff3b3b',go:'dragones',text:'Constelación de dragón chino: toca una estrella para explorarla.'},
+ {name:'Dì yi ge chusheng de',h:5,color:'#00c8ff',text:'Contenido por definir.',detail:true},
+ {name:'Desagradecidos',h:31,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Los Grandes',h:32,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Agradecidos',h:33,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Timsah',h:13,color:'#2ba673',text:'Contenido por definir.',detail:true},
+ {name:'Tigres',h:4,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Ancestros',h:1,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Acechadores',h:7,color:'#5a5cff',text:'Contenido por definir.',detail:true},
+ {name:'Dracosapien',h:26,color:'#ff6a00',text:'Contenido por definir.',detail:true},
+ {name:'Petrosapien',h:25,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Jormas',h:10,color:'#2e9bff',text:'Contenido por definir.',detail:true},
+ {name:'Mantarraya',h:22,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'Fénix',h:21,color:'#ff4a00',text:'Contenido por definir.',detail:true},
+ {name:'El Esquivo',h:24,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Cangretoni',h:23,color:'#3ddc6b',text:'Contenido por definir.',detail:true}
+]},
+dragones:{title:'Dragones — Dragón chino',layout:'orion',scale:.9,zk:1.4,nodes:[
+ {name:'Funcanglong',x:-2.4,y:1.6,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Panlong',x:-1.2,y:0.6,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Dilong',x:0.0,y:1.2,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Shenlong',x:1.2,y:0.2,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Yinlong',x:2.0,y:0.9,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Tianlong',x:2.6,y:-0.8,color:'#ff3b3b',text:'Contenido por definir.',detail:true}
+],links:[[0,1],[1,2],[2,3],[3,4],[4,5]]},
+artefactos:{title:'Artefactos',nodes:[
+ {name:'Reliquias Tang',h:0,color:'#ff3b3b',go:'tang',text:'Descubre cuáles son las reliquias de la Dinastía Tang'},
+ {name:'Reliquias Cacería Eterna',h:1,color:'#3ddc6b',go:'caceria',text:'Descubre cuáles son las reliquias de la Cacería Eterna'},
+ {name:'Artefactos Antiguos',h:2,color:'#b45cff',go:'antiguos',text:'Descubre los artefactos perdidos en el tiempo'},
+ {name:'Reliquias Planos',h:3,color:'#ffe135',go:'reliquiasplanos',text:'Descubre cuáles son las reliquias de cada plano'},
+ {name:'Armas Soberanas',h:4,color:'#ffd700',go:'soberanas',text:'Contenido por definir.'},
+ {name:'Armas Elemental',h:5,color:'#2ea8ff',go:'armas',text:'Descubre las armas existentes de cada elemento en Enosi'},
+ {name:'Artefactos Primordiales',h:6,color:'#ffffff',go:'artprimordiales',text:'Descubre los artefactos que traerá la tormenta'}
+]},
+artprimordiales:{title:'Artefactos Primordiales',rings:1,nodes:[
+]},
+armas:{title:'Armas Elemental',rings:2,scale:.66,zk:2,nodes:[
+ {name:'Gùnbàng Shãn',h:7,color:'#a86a2e',text:'Contenido por definir.',detail:true},
+ {name:'El Hacha',h:8,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Dāorèn Ying',h:9,color:'#8b5cf6',text:'Contenido por definir.',detail:true},
+ {name:'Tortuga Dragón',h:10,color:'#c7d9f2',text:'Contenido por definir.',detail:true},
+ {name:'Zurda y Diestra',h:11,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Sangría',h:12,color:'#ff6a00',text:'Contenido por definir.',detail:true},
+ {name:'Justicia',h:13,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Escudo de Kret',h:14,color:'#e8c66a',text:'Contenido por definir.',detail:true},
+ {name:'Propósito',h:15,color:'#d9f2ff',text:'Contenido por definir.',detail:true},
+ {name:'Hoja de los Saleh',h:16,color:'#5aff2e',text:'Contenido por definir.',detail:true},
+ {name:'Lanza Accius',h:17,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Apego',h:18,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Dãoqiào Mútou',h:1,color:'#7c4f2a',text:'Contenido por definir.',detail:true},
+ {name:'Exterminadora de Xenos',h:2,color:'#ff6a00',text:'Contenido por definir.',detail:true},
+ {name:'Himno',h:3,color:'#fff0a0',text:'Contenido por definir.',detail:true}
+]},
+tang:{title:'Reliquias Tang',nodes:[
+ {name:'Lágrimas de Panlong',h:0,color:'#2ea8ff',text:'Contenido por definir.',detail:true},
+ {name:'Llamas de Justicia de Tianlong',h:1,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'La Alianza de Obsidiana de Fucanglong',h:3,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Alianza de Piedra Volcánica de Dilong',h:5,color:'#ff3b3b',text:'Contenido por definir.',detail:true}
+]},
+caceria:{title:'Reliquias Cacería Eterna',nodes:[
+ {name:'Segadora del Amanecer',h:0,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Desgarradora de Mundus',h:1,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Destino Glorioso del Sanctus',h:3,color:'#fff2a8',text:'Contenido por definir.',detail:true},
+ {name:'Hojas del Sanctus',h:5,color:'#9aa4b2',text:'Contenido por definir.',detail:true}
+]},
+reliquiasplanos:{title:'Reliquias Planos',nodes:[
+ {name:'El Pendiente de Autoridad',h:0,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Cas y Mir',h:1,color:'#2b4a9e',text:'Contenido por definir.',detail:true},
+ {name:'La corona de Erebo',h:3,color:'#1a1a24',text:'Contenido por definir.',detail:true},
+ {name:'La Lanza de Longinus',h:5,color:'#ffe135',text:'Contenido por definir.',detail:true}
+]},
+soberanas:{title:'Armas Soberanas',nodes:[
+ {name:'Segadora de Historia',h:1,color:'#ffd700',text:'Contenido por definir.',detail:true},
+ {name:'Legado del Magno',h:4,color:'#fff2a8',text:'Contenido por definir.',detail:true}
+]},
+antiguos:{title:'Artefactos Antiguos',rings:2,scale:.7,zk:2,fs:.12,fw:1.9,fmin:10,nodes:[
+ {name:'Atlas',h:6,color:'#22222e',text:'Contenido por definir.',detail:true},
+ {name:'Manto Velado',h:1,color:'#7ee8ff',text:'Contenido por definir.',detail:true},
+ {name:'Espada Cromática',h:2,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'Brazalete Crescendum',h:4,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Liuxing',h:0,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Alianza de Diamante Blanco de Panlong',h:8,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Alianza de Esmeralda Partida de Shenlong',h:11,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Alianza de Oro pulido de Tianlong',h:14,color:'#ffd94a',text:'Contenido por definir.',detail:true},
+ {name:'Alianza de Záfiro Estelar de Yinlong',h:17,color:'#2ea8ff',text:'Contenido por definir.',detail:true}
+]},
+naciones:{title:'Naciones de Enosi',rings:2,scale:.66,zk:2,nodes:[
+ {name:'Dzungla',h:12,color:'#3ddc6b',text:'Contenido por definir.',detail:true},
+ {name:'Kret',h:13,color:'#ff9a1f',text:'Contenido por definir.',detail:true},
+ {name:'High Silver',h:16,color:'#3a6bff',text:'Contenido por definir.',detail:true},
+ {name:'Kinshu',h:1,color:'#ffe135',text:'Contenido por definir.',detail:true},
+ {name:'Baihu',h:4,color:'#b8dcff',text:'Contenido por definir.',detail:true},
+ {name:'Lóng',h:0,color:'#ff3b3b',text:'Contenido por definir.',detail:true},
+ {name:'Kanama',h:7,color:'#9aa4b2',text:'Contenido por definir.',detail:true},
+ {name:'Orgladiam',h:10,color:'#ffffff',text:'Contenido por definir.',detail:true},
+ {name:'Bach',h:6,color:'#00b4c8',text:'Contenido por definir.',detail:true},
+ {name:'La Nación del Hielo',h:5,color:'#b45cff',text:'Contenido por definir.',detail:true},
+ {name:'Vulkan',h:8,color:'#ff4a1f',text:'Contenido por definir.',detail:true},
+ {name:'Yangtsé',h:14,color:'#ff7eb9',text:'Contenido por definir.',detail:true},
+ {name:'Micerinos',h:18,color:'#d4af37',text:'Contenido por definir.',detail:true}
+]}};
+let view='root',NODES=VIEWS.root.nodes.concat(loadCustom('root'));
+// ---- MOTOR (no editar) ------------------------------------------------------
+// Validador de datos: avisa en consola sin detener nada.
+(function validate(){const errs=[];Object.keys(VIEWS).forEach(k=>{const v=VIEWS[k],n=v.rings||1,max=3*n*(n+1);
+ (v.nodes||[]).forEach((nd,i)=>{const at=k+'['+i+'] '+(nd.name||'?');
+  if(v.layout==='orion'||v.layout==='vacio'){if(typeof nd.x!=='number'||typeof nd.y!=='number')errs.push(at+': x/y inválido')}
+  else if(!Number.isInteger(nd.h)||nd.h<0||nd.h>max)errs.push(at+': h='+nd.h+' fuera de 0-'+max);
+  if(nd.go&&!VIEWS[nd.go])errs.push(at+': go a vista inexistente "'+nd.go+'"')});
+ const sl=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'nodo',seen=new Set();
+ (v.nodes||[]).forEach(nd=>{const s=sl(nd.name);if(seen.has(s))errs.push(k+': nombre repetido "'+nd.name+'" (comparte ficha)');seen.add(s)});
+ (v.links||[]).forEach((l,j)=>{l.forEach(x=>{if(!v.nodes[x])errs.push(k+'.links['+j+']: índice '+x+' inválido')})})});
+ if(errs.length)console.warn('Enosi: datos a revisar\n'+errs.join('\n'))})();
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),info=document.getElementById('info');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,F='Cinzel,Georgia,serif',S3=Math.sqrt(3);
+const rgb=h=>{const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]},rgba=(h,a)=>{const c=rgb(h);return`rgba(${c[0]},${c[1]},${c[2]},${a})`};
+const safeColor=c=>/^#[0-9a-f]{6}$/i.test(c||'')?c:'#5f8fd0';
+const safeImg=u=>/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(u||'')?u:'';
+const attr=s=>escHtml(String(s==null?'':s)).replace(/"/g,'&quot;');
+// geometría: 7 hexágonos (centro + 6) = placas del caparazón
+let hexes,V,E,HV,rim,geoR=3.6;
+function buildGeo(n){
+ const all=[];
+ for(let q=-n;q<=n;q++)for(let r=-n;r<=n;r++){if(Math.abs(q+r)>n)continue;const x=S3*(q+r/2),y=1.5*r;all.push({x,y,d:Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r)),a:((Math.atan2(y,x)*180/Math.PI)+360+1e-6)%360})}
+ all.sort((u,v)=>u.d-v.d||u.a-v.a);hexes=all.map(h=>[h.x,h.y]);
+ V=new Map();E=new Map();HV=[];
+ hexes.forEach(h=>{const ids=[];for(let j=0;j<6;j++){const a=Math.PI/6+j*Math.PI/3,x=h[0]+Math.cos(a),y=h[1]+Math.sin(a),k=Math.round(x*100)+','+Math.round(y*100);if(!V.has(k))V.set(k,{x,y,n:0});V.get(k).n++;ids.push(k)}
+  HV.push(ids);for(let j=0;j<6;j++){const p=ids[j],q=ids[(j+1)%6];E.set(p<q?p+'|'+q:q+'|'+p,[p,q])}});
+ const rk=n===1?1.3:1.17;
+ rim=[...V.values()].filter(v=>v.n<3).sort((a,b)=>Math.atan2(a.y,a.x)-Math.atan2(b.y,b.x)).map(v=>({i:v,o:{x:v.x*rk,y:v.y*rk}}));
+ geoR=rim.reduce((m,r)=>Math.max(m,Math.hypot(r.o.x,r.o.y)),0)*1.02}
+buildGeo(1);
+const isOrion=()=>VIEWS[view].layout==='orion';
+const isVacio=()=>VIEWS[view].layout==='vacio';
+const nodePos=n=>(isOrion()||isVacio())?[n.x,n.y]:hexes[n.h];
+function mkLinks(){
+ if(isOrion()&&VIEWS[view].links)return VIEWS[view].links.slice();
+ const L=[],d=(a,b)=>{const A=nodePos(a),B=nodePos(b);return Math.hypot(A[0]-B[0],A[1]-B[1])};
+ const noUp=(a,b)=>!!a.nolinkUp&&nodePos(b)[1]<nodePos(a)[1]-1e-6;
+ NODES.forEach((a,i)=>NODES.forEach((b,j)=>{if(j>i&&!noUp(a,b)&&!noUp(b,a)&&d(a,b)<1.8)L.push([i,j])}));
+ NODES.forEach((a,i)=>{if(NODES.length<2||L.some(l=>l[0]===i||l[1]===i))return;let b=-1,m=1e9;NODES.forEach((c,j)=>{const k=d(a,c);if(j!==i&&k<m&&!noUp(a,c)&&!noUp(c,a)){m=k;b=j}});if(b>=0)L.push([i,b])});return L}
+let links=mkLinks();
+// cielo
+let W,H,dpr,s,sb,cx,cy,neb,infoR=null,stars=[];
+const g=()=>(Math.random()+Math.random()+Math.random()-1.5)/1.5;
+for(let i=0;i<340;i++){const b=i%5<2,t=Math.random();stars.push({x:b?t:Math.random(),y:b?.2+.6*t+g()*.09:Math.random(),r:Math.random()*1.3+.3,p:Math.random()*6.28})}
+function size(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+ const wide=W>=900;document.body.classList.toggle('wide',wide);
+ if(wide){const pw=Math.min(320,W*.26);s=Math.min((W-pw-70)/7,(H*.5-12)/3);cx=(W-pw-48)/2;cy=H*.5}
+ else{cy=H*.4;const ph=110+Math.min(200,H*.22);s=Math.max(30,Math.min(W/7.4,(cy-12)/3,(H-30-ph-cy)/3));cx=W/2}
+ sb=s;s*=VIEWS[view].scale||1;measInfo();
+ neb=document.createElement('canvas');neb.width=W;neb.height=H;const n=neb.getContext('2d');n.fillStyle='#050817';n.fillRect(0,0,W,H);
+ [[.2,.25,.5,'90,40,160,.32'],[.8,.7,.55,'20,110,140,.26'],[.55,.5,.6,'60,50,150,.22'],[.85,.15,.35,'160,50,120,.18']].forEach(a=>{const r=a[2]*Math.max(W,H),gr=n.createRadialGradient(a[0]*W,a[1]*H,0,a[0]*W,a[1]*H,r);gr.addColorStop(0,'rgba('+a[3]+')');gr.addColorStop(1,'rgba(0,0,0,0)');n.fillStyle=gr;n.fillRect(0,0,W,H)})}
+addEventListener('resize',size);size();
+let hover=-1,pin=-1,picking=false,deleting=false,addH=-1;
+function measInfo(){if(infoR)return;try{infoR=document.getElementById('info').getBoundingClientRect()}catch(e){infoR=null}}
+const P=(x,y)=>[cx+x*s,cy+y*s*.92+(reduce?0:Math.sin(perf/1400)*3)];let perf=0;
+function hexPath(i){const ids=HV[i];ctx.beginPath();ids.forEach((k,j)=>{const v=V.get(k),p=P(v.x,v.y);j?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath()}
+// constelación de tortuga (fondo): estrellas [x,y] y líneas [a,b]
+const TS=[[0,-5],[-.6,-4.2],[.6,-4.2],[0,-3.4],[2,-2.7],[3.3,-.8],[3,1.8],[1.4,3.4],[0,3.9],[-1.4,3.4],[-3,1.8],[-3.3,-.8],[-2,-2.7],[4.3,-3.3],[5.3,-2.3],[-4.3,-3.3],[-5.3,-2.3],[4.2,3.2],[3.3,4],[-4.2,3.2],[-3.3,4],[0,4.7],[0,0]];
+const TL=[[3,1],[1,0],[0,2],[2,3],[3,4],[3,12],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[4,13],[13,14],[14,5],[12,15],[15,16],[16,11],[6,17],[17,18],[18,7],[10,19],[19,20],[20,9],[8,21],[22,4],[22,5],[22,7],[22,9],[22,11],[22,12]];
+function constel(t){let u,ox,oy;
+ if(W>=900){const bw=Math.min(W*.14,190);u=bw/10.8;ox=14+5.4*u;oy=14+5*u}
+ else{u=Math.min(W*.9/10.8,(cy-3.05*sb*.92-14)/9.7);ox=W/2;oy=8+5*u}
+ const q=a=>[ox+TS[a][0]*u,oy+TS[a][1]*u];
+ ctx.strokeStyle='rgba(157,184,255,.32)';ctx.lineWidth=1;ctx.beginPath();TL.forEach(l=>{const a=q(l[0]),b=q(l[1]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])});ctx.stroke();
+ ctx.shadowColor='#9dc0ff';ctx.shadowBlur=8;ctx.fillStyle='#eaf2ff';
+ TS.forEach((v,i)=>{const p=q(i);ctx.globalAlpha=.6+.4*Math.sin(t*1.3+i*1.9);ctx.beginPath();ctx.arc(p[0],p[1],i===22||i===0?2.2:1.6,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalAlpha=1}
+// ala de fondo en el extremo opuesto a la tortuga
+const WG=[[0,-4.5],[.7,-3.4],[1.4,-2],[2.1,-.4],[2.3,1],[1.9,2.2],[1.2,3],[.2,3.6],[-.6,4.4],[-1.2,3.4],[-1.8,2.4],[-1.6,1.2],[-1.2,0],[-.9,-1.2],[-.5,-2.4],[-.2,-3.5],[.3,-1.8],[.5,-.2],[.2,1.4]];
+const WL=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[12,13],[13,14],[14,15],[15,0],[15,16],[16,1],[13,17],[17,2],[12,17],[11,18],[18,4],[10,18],[9,11]];
+function drawWing(t){let u,ox,oy;
+ if(W>=900){u=Math.min(W*.14,190)/10.8;const pw=Math.min(320,W*.26);ox=W-14-5.4*u-pw;oy=H-14-4.6*u}
+ else{u=Math.min(W*.9/10.8,H*.42/9.2);ox=W/2;oy=H-8-4.6*u}
+ const q=a=>[ox+WG[a][0]*u,oy+WG[a][1]*u];
+ ctx.strokeStyle='rgba(157,184,255,.30)';ctx.lineWidth=1;ctx.beginPath();WL.forEach(l=>{const a=q(l[0]),b=q(l[1]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])});ctx.stroke();
+ ctx.shadowColor='#9dc0ff';ctx.shadowBlur=7;ctx.fillStyle='#eaf2ff';
+ WG.forEach((v,i)=>{const p=q(i);ctx.globalAlpha=.55+.4*Math.sin(t*1.2+i*2.1);ctx.beginPath();ctx.arc(p[0],p[1],1.7,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalAlpha=1}
+// capricornio anclado sobre el panel Enosi
+const CP=[[-1.8,-1],[-1,-1.5],[-.2,-1.2],[.6,-.7],[1.4,-1],[2,-.2],[1.6,.6],[.8,.5],[.2,1.1],[-.4,1.8],[.9,1.6]];
+const CL=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[7,10]];
+function drawCap(t){if(!infoR)return;const zb=1+(cam.z-1)*.12;
+ const u=Math.min(W*.12,150)/8;
+ const px=infoR.left+infoR.width/2,py=infoR.top-70;
+ const ox=cam.fx+(px-cam.fx)/zb+120,oy=cam.fy+(py-cam.fy)/zb;
+ const q=a=>[ox+CP[a][0]*u,oy+CP[a][1]*u];
+ ctx.strokeStyle='rgba(157,184,255,.30)';ctx.lineWidth=1;ctx.beginPath();CL.forEach(l=>{const a=q(l[0]),b=q(l[1]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])});ctx.stroke();
+ ctx.shadowColor='#9dc0ff';ctx.shadowBlur=7;ctx.fillStyle='#eaf2ff';
+ CP.forEach((v,i)=>{const p=q(i);ctx.globalAlpha=.55+.4*Math.sin(t*1.1+i*1.8+3);ctx.beginPath();ctx.arc(p[0],p[1],1.7,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalAlpha=1}
+// estrella fugaz pequeña entre el caparazón y Pi
+const SH=[[.9,-.9],[-.1,-.3],[-.6,.1],[-1,.4],[-1.3,.7]];
+const SL=[[0,1],[1,2],[2,3],[3,4]];
+function drawShoot(t){let u,px,py;
+ if(W>=900){u=Math.min(W*.14,190)/10.8;px=W-24-2*u;py=8+4.2*u}
+ else{u=Math.min(W*.9/10.8,H*.42/9.2);px=W-8-2*u;py=8+4.2*u}
+ const ox=(cx+s*geoR+px)/2,oy=py,u2=u*1.4,q=i=>[ox+SH[i][0]*u2,oy+SH[i][1]*u2];
+ ctx.strokeStyle='rgba(200,220,255,.35)';ctx.lineWidth=1;ctx.beginPath();SL.forEach(l=>{const a=q(l[0]),b=q(l[1]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])});ctx.stroke();
+ ctx.shadowColor='#cfe0ff';ctx.shadowBlur=8;ctx.fillStyle='#ffffff';
+ SH.forEach((p,i)=>{const x=ox+p[0]*u2,y=oy+p[1]*u2;ctx.globalAlpha=.5+.4*Math.sin(t*1.4+i*1.5);ctx.beginPath();ctx.arc(x,y,i===0?2.2:1.4,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalAlpha=1}
+// Pi a la derecha del ala, mismo tamaño
+const PI=[[-2,-4],[2,-4],[-1.2,-4],[-1.2,4],[1.2,-4],[1.2,4],[-2,-4],[-2,4],[2,-4],[2,4]];
+const PL=[[0,1],[2,3],[4,5],[0,6],[1,8]];
+function drawPi(t){let u,ox,oy;
+ if(W>=900){u=Math.min(W*.14,190)/10.8;ox=W-24-2*u;oy=8+4.2*u}
+ else{u=Math.min(W*.9/10.8,H*.42/9.2);ox=W-8-2*u;oy=8+4.2*u}
+ const q=a=>[ox+PI[a][0]*u,oy+PI[a][1]*u];
+ ctx.strokeStyle='rgba(157,184,255,.30)';ctx.lineWidth=1;ctx.beginPath();PL.forEach(l=>{const a=q(l[0]),b=q(l[1]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])});ctx.stroke();
+ ctx.shadowColor='#9dc0ff';ctx.shadowBlur=7;ctx.fillStyle='#eaf2ff';
+ PI.forEach((v,i)=>{const p=q(i);ctx.globalAlpha=.55+.4*Math.sin(t*1.15+i*2.2+2);ctx.beginPath();ctx.arc(p[0],p[1],1.7,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalAlpha=1}
+// libro abierto abajo-izquierda, opuesto al ala
+const BK=[[-1.4,.2],[-.7,-.2],[0,0],[.7,-.2],[1.4,.2],[-1.4,1.2],[0,1],[1.4,1.2]];
+const BL=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,4],[2,6]];
+function drawBook(t){let u,ox,oy;
+ if(W>=900){u=Math.min(W*.14,190)/10.8;ox=14+2.2*u;oy=H-14-1.4*u}
+ else{u=Math.min(W*.9/10.8,H*.42/9.2);ox=Math.max(14+1.6*u,W/2-5.2*u);oy=H-8-1.4*u}
+ const bs=1.8,q=a=>[ox+BK[a][0]*u*bs,oy+BK[a][1]*u*bs];
+ ctx.strokeStyle='rgba(157,184,255,.30)';ctx.lineWidth=1;ctx.beginPath();BL.forEach(l=>{const a=q(l[0]),b=q(l[1]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1])});ctx.stroke();
+ ctx.shadowColor='#9dc0ff';ctx.shadowBlur=7;ctx.fillStyle='#eaf2ff';
+ BK.forEach((v,i)=>{const p=q(i);ctx.globalAlpha=.55+.4*Math.sin(t*1.15+i*1.9+1);ctx.beginPath();ctx.arc(p[0],p[1],1.7,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalAlpha=1}
+let last=0;const cam={z:1,tz:1,fx:0,fy:0},ZOOM=1.6;
+let trans=null;
+function wrapName(name,max){
+ if(ctx.measureText(name).width<=max)return[name];
+ if(name.indexOf(' ')>0){let b=-1,d=1e9;for(let i=0;i<name.length;i++)if(name[i]===' '&&Math.abs(i-name.length/2)<d){d=Math.abs(i-name.length/2);b=i}return[name.slice(0,b),name.slice(b+1)]}
+ if(name.indexOf('.')>0)return[name];
+ if(name.length<8)return[name];
+ const out=[];let cur='';
+ for(const ch of name){if(cur&&ctx.measureText(cur+ch).width>max){out.push(cur);cur=ch}else cur+=ch}
+ if(cur)out.push(cur);
+ if(out.length>2)out.splice(1,out.length-1,out.slice(1).join(''));
+ return out}
+function goView(key,isBack){if(trans)return;if(!isBack)vstack.push(view);if(isBack){cam.fx=cx;cam.fy=cy}trans={ph:'out',f:0,to:key,back:!!isBack}}
+let vstack=[];
+function setView(k){view=k;NODES=VIEWS[k].nodes.concat(loadCustom(k));if(k==='root')vstack=[];hover=-1;pin=-1;picking=false;deleting=false;addH=-1;const abx=document.getElementById('addbox');if(abx)abx.hidden=true;buildGeo(VIEWS[k].rings||1);loadImgs();links=mkLinks();size();say(-1);if(VIEWS[k].layout==='vacio'&&NODES[0]&&NODES[0].detail)openDetail(0)}
+function frame(ms){perf=ms;const t=reduce?0:ms/1000;
+ const dt=Math.min(.05,(ms-last)/1000);last=ms;const k=reduce?1:1-Math.exp(-dt*7),tg=(hover>=0&&hover<NODES.length)?hover:(pin>=0&&pin<NODES.length?pin:-1);
+ if(tg>=0){const c=P(...nodePos(NODES[tg]));if(cam.z<1.02){cam.fx=c[0];cam.fy=c[1]}else{cam.fx+=(c[0]-cam.fx)*k;cam.fy+=(c[1]-cam.fy)*k}cam.tz=ZOOM*(VIEWS[view].zk||1)}else cam.tz=1;
+ if(trans){const sp=reduce?1:dt/.55;
+  if(trans.ph==='out'){trans.f=Math.min(1,trans.f+sp);cam.tz=trans.back?.55:6;
+   if(trans.f>=1){setView(trans.to);hover=-1;pin=-1;trans.ph='in';cam.z=trans.back?1.8:.55;cam.tz=1;cam.fx=cx;cam.fy=cy}}
+  else{trans.f=Math.max(0,trans.f-sp);cam.tz=1;if(trans.f<=0)trans=null}}
+ cam.z+=(cam.tz-cam.z)*k;
+ ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+ ctx.save();const zb=1+(cam.z-1)*.12;ctx.translate(cam.fx,cam.fy);ctx.scale(zb,zb);ctx.translate(-cam.fx,-cam.fy);ctx.drawImage(neb,0,0);
+ stars.forEach(a=>{ctx.globalAlpha=.35+.65*Math.abs(Math.sin(t*.7+a.p));ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(a.x*W,a.y*H,a.r,0,6.283);ctx.fill()});ctx.globalAlpha=1;constel(t);drawWing(t);drawBook(t);drawPi(t);drawShoot(t);drawCap(t);ctx.restore();
+ ctx.save();ctx.translate(cam.fx,cam.fy);ctx.scale(cam.z,cam.z);ctx.translate(-cam.fx,-cam.fy);
+ // margen del caparazón / constelación Orión
+ if(!isOrion()&&!isVacio()){
+  ctx.beginPath();rim.forEach((r,j)=>{const p=P(r.o.x,r.o.y);j?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();
+  const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,s*geoR);bg.addColorStop(0,'#101d4a');bg.addColorStop(1,'#070d26');ctx.fillStyle=bg;ctx.fill();
+  ctx.shadowColor='#e8c66a';ctx.shadowBlur=16;ctx.strokeStyle='rgba(232,198,106,.7)';ctx.lineWidth=2;ctx.stroke();ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(150,190,255,.25)';ctx.lineWidth=1;rim.forEach(r=>{const a=P(r.i.x,r.i.y),b=P(r.o.x,r.o.y);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()});
+  // placas encendidas
+  NODES.forEach((n,i)=>{const on=hover===i||pin===i;hexPath(n.h);const c=P(...nodePos(n)),gr=ctx.createRadialGradient(c[0],c[1],0,c[0],c[1],s);gr.addColorStop(0,rgba(n.color,on?.5:.22));gr.addColorStop(1,rgba(n.color,on?.14:.05));ctx.fillStyle=gr;ctx.fill()});
+  ctx.strokeStyle='rgba(150,200,255,.3)';ctx.lineWidth=1.2;E.forEach(e=>{const a=V.get(e[0]),b=V.get(e[1]),p=P(a.x,a.y),q=P(b.x,b.y);ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(q[0],q[1]);ctx.stroke()});
+  if(picking){ctx.save();ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(232,198,106,.95)';ctx.lineWidth=2;freeCells().forEach(h=>{hexPath(h);ctx.stroke()});ctx.restore()}
+  ctx.globalCompositeOperation='lighter';
+  NODES.forEach((n,i)=>{const on=hover===i||pin===i;hexPath(n.h);ctx.shadowColor=n.color;ctx.shadowBlur=on?22:10;ctx.strokeStyle=rgba(n.color,(on?.95:.55)+.15*Math.sin(t*2+i));ctx.lineWidth=on?2.6:1.8;ctx.stroke()});
+ }else{
+  ctx.globalCompositeOperation='lighter';
+ }
+ // líneas de conexión con pulsos (se omiten en vista vacía)
+ if(!isVacio()){
+ links.forEach((l,k)=>{if(NODES.length>60&&!(hover===l[0]||hover===l[1]||pin===l[0]||pin===l[1]))return;const A=NODES[l[0]],B=NODES[l[1]],a=P(...nodePos(A)),b=P(...nodePos(B)),on=[hover,pin].some(x=>x===l[0]||x===l[1]);
+  const gr=ctx.createLinearGradient(a[0],a[1],b[0],b[1]);gr.addColorStop(0,A.color);gr.addColorStop(1,B.color);
+  ctx.shadowColor=A.color;ctx.shadowBlur=on?16:8;ctx.globalAlpha=on?1:.7;ctx.strokeStyle=gr;ctx.lineWidth=on?2.6:1.6;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();
+  ctx.shadowBlur=0;ctx.globalAlpha=1;const u=((t*.22+k*.37)%1+1)%1,x=a[0]+(b[0]-a[0])*u,y=a[1]+(b[1]-a[1])*u;
+  const pg=ctx.createRadialGradient(x,y,0,x,y,9);pg.addColorStop(0,'#fff');pg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=pg;ctx.beginPath();ctx.arc(x,y,9,0,6.283);ctx.fill()});
+ // nodos
+ NODES.forEach((n,i)=>{const c=P(...nodePos(n)),on=hover===i||pin===i,r=(on?12:9)*Math.max(.7,s/60);
+  const gr=ctx.createRadialGradient(c[0],c[1],0,c[0],c[1],r*4);gr.addColorStop(0,rgba(n.color,.9));gr.addColorStop(1,rgba(n.color,0));ctx.fillStyle=gr;ctx.beginPath();ctx.arc(c[0],c[1],r*4,0,6.283);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(c[0],c[1],r*.55,0,6.283);ctx.fill()});
+ ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';const LFS=VIEWS[view].fs||.185,LFW=VIEWS[view].fw||1.65,LFM=VIEWS[view].fmin||10;ctx.font='700 '+Math.max(LFM,(s*LFS)|0)+'px '+F;ctx.textAlign='center';ctx.lineJoin='round';
+ NODES.forEach((n,i)=>{const c=P(...nodePos(n)),fs=Math.max(LFM,(s*LFS)|0),ls=wrapName(n.name,s*LFW);ctx.lineWidth=5;ctx.strokeStyle='rgba(3,6,20,.95)';ctx.fillStyle=(hover===i||pin===i)?n.color:'#eef5ff';ls.forEach((ln,q)=>{const y=c[1]+s*.5+q*fs*1.15;ctx.strokeText(ln,c[0],y);ctx.fillText(ln,c[0],y)})});
+ }
+ ctx.textAlign='start';ctx.restore();if(trans&&trans.f>0){ctx.fillStyle='rgba(5,8,23,'+trans.f+')';ctx.fillRect(0,0,W,H)}requestAnimationFrame(frame)}
+function pick(e){let b=-1,d=s*.95*cam.z;NODES.forEach((n,i)=>{const c=P(...nodePos(n)),x=cam.fx+(c[0]-cam.fx)*cam.z,y=cam.fy+(c[1]-cam.fy)*cam.z,k=Math.hypot(x-e.clientX,y-e.clientY);if(k<d){d=k;b=i}});return b}
+function freeCells(){const used=new Set(NODES.map(n=>n.h));const out=[];for(let h=0;h<hexes.length;h++)if(!used.has(h))out.push(h);return out}
+function cellPick(e){let b=-1,d=s*.95*cam.z;hexes.forEach((hh,h)=>{const c=P(hh[0],hh[1]),x=cam.fx+(c[0]-cam.fx)*cam.z,y=cam.fy+(c[1]-cam.fy)*cam.z,k=Math.hypot(x-e.clientX,y-e.clientY);if(k<d){d=k;b=h}});return b}
+function togglePick(){picking=!picking;deleting=false;addH=-1;say(hover>=0?hover:pin)}
+function toggleDel(){if(!picking)return;deleting=!deleting;say(hover>=0?hover:pin)}
+let confirmOk=null;
+function askConfirm(msg,ok,label,title){document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmTitle').textContent=title||'Eliminar';document.getElementById('confirmOk').textContent=label||'Eliminar';confirmOk=ok;document.getElementById('confirmbox').hidden=false}
+function closeConfirm(ok){document.getElementById('confirmbox').hidden=true;const f=confirmOk;confirmOk=null;if(ok&&f)f()}
+document.getElementById('confirmOk').addEventListener('click',()=>closeConfirm(true));
+document.getElementById('confirmNo').addEventListener('click',()=>closeConfirm(false));
+function loadCustom(k){try{const a=JSON.parse(localStorage.getItem('enosi-custom-'+k)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function saveCustom(k,a){try{localStorage.setItem('enosi-custom-'+k,JSON.stringify(a));return true}catch(e){return false}}
+let shown=-1;
+function say(i){shown=i;measInfo();const hint=isOrion()?'Toca una estrella para explorarla.':isVacio()?'Ficha de lectura.':'Toca una placa del caparazón para explorarla.';const bb=(view!=='root')?'<button class="backbtn" type="button">← Volver</button>':'';const shell=!isOrion()&&!isVacio()&&view!=='root'&&freeCells().length>0;const ab=shell?'<button class="addbtn" type="button">'+(picking?'✕ Cancelar':'＋ Añadir')+'</button>':'';
+ const db=(shell&&picking)?'<button class="delbtn" type="button">'+(deleting?'✓ Listo':'－ Eliminar')+'</button>':'';
+ const ph=(picking&&deleting&&i>=0&&NODES[i]&&!NODES[i].uid)?'Placa original del caparazón: no se puede eliminar.':(picking?(deleting?'Elige la placa propia a eliminar.':'Elige una placa vacía resaltada.'):hint);
+ if(i<0){info.innerHTML=bb+ab+db+'<b>'+VIEWS[view].title+'</b><span>'+ph+'</span>';return}const n=NODES[i],blocked=picking&&deleting&&!n.uid;
+ const im=safeImg(n.img);
+ info.innerHTML=bb+ab+db+'<b style="color:'+safeColor(n.color)+'">'+escHtml(String(n.name))+'</b><span>'+escHtml(String(n.text||''))+'</span>'+(blocked?'<span class="go">Placa original del caparazón: no se puede eliminar.</span>':n.go?'<span class="go">Clic para entrar</span>':n.detail?'<span class="go">Clic para abrir ficha</span>':'')+'<div class="art">'+(im?'<img alt="'+attr(n.name)+'" src="'+im+'">':'<span>Ilustración<br>clic para añadir</span>')+'</div>'}
+cv.addEventListener('pointermove',e=>{if(trans)return;const i=pick(e);if(i!==hover){hover=i;cv.style.cursor=i>=0?'pointer':'default';say(i>=0?i:pin)}});
+cv.addEventListener('pointerdown',e=>{if(trans||!detail.hidden)return;if(!document.getElementById('confirmbox').hidden)return;if(picking){const h=cellPick(e);if(h>=0){const idx=NODES.findIndex(n=>n.h===h);if(idx<0){if(!deleting)openAdd(h)}else{const t=NODES[idx];if(deleting){if(t.uid)askConfirm('¿Eliminar "'+t.name+'"? Esta acción no se puede deshacer.',()=>{saveCustom(view,loadCustom(view).filter(x=>x.uid!==t.uid));setView(view)});else say(idx)}}}return}const i=pick(e);if(i<0){pin=-1;say(hover);return}hover=i;pin=i;say(i);const n=NODES[i];if(n.detail){openDetail(i);return}if(n.go)goView(n.go);else if(n.url)window.open(n.url,'_blank','noopener')});
+function goBack(){if(deleting){deleting=false;say(hover);return}if(picking){picking=false;addH=-1;say(hover);return}if(!detail.hidden){requestClose();return}if(view==='root'&&!vstack.length)return;const prev=vstack.pop()||'root';goView(prev,true)}
+info.addEventListener('click',e=>{if(e.target.closest('.backbtn')){goBack();return}if(e.target.closest('.addbtn')){togglePick();return}if(e.target.closest('.delbtn')){toggleDel();return}if(shown>=0&&e.target.closest('.art'))fi.click()});
+addEventListener('keydown',e=>{if(e.key!=='Escape')return;const cb=document.getElementById('confirmbox');if(cb&&!cb.hidden){closeConfirm(false);return}goBack()});
+// ficha detalle Radomir: texto central + imagen a la derecha
+const detail=document.getElementById('detail'),detailTitle=document.getElementById('detailTitle'),detailBody=document.getElementById('detailBody'),detailText=document.getElementById('detailText'),detailArt=document.getElementById('detailArt'),detailEdit=document.getElementById('detailEdit'),detailSave=document.getElementById('detailSave');
+let detailNode=-1;
+const slug=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'nodo';
+const dName=()=>slug(NODES[detailNode]&&NODES[detailNode].name);
+const dtk=()=>'enosi-text-'+view+'-'+dName();const dfk=()=>'enosi-fields-'+view+'-'+dName();
+const oldtk=()=>'enosi-text-'+view+'-'+detailNode;const oldfk=()=>'enosi-fields-'+view+'-'+detailNode;
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
+const inlineKey=(id,nm)=>'enosi-inline-'+view+'-'+(nm||dName())+'-'+id;
+// migración puntual: ficha compartida de Timsah -> J.Timsah
+(function(){try{const re=/^enosi-(text|fields|img|inline)-ascendidos-timsah(-.*)?$/,cp=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&re.test(k))cp.push(k)}cp.forEach(k=>{const nk=k.replace('-ascendidos-timsah','-ascendidos-j-timsah');if(lsGet(nk)===null){const v=lsGet(k);if(v!==null)lsSet(nk,v)}})}catch(e){}})();
+const FIELD_IDS=['titulo','raza','edad','genero','elemento','ascension','afiliacion','estado','allegados'];
+const ARMA_FIELDS=['elemento','creador','portador','tipo','categoria','estado'];
+const ERA_FIELDS=['anos'];
+const FIELD_SETS={armas:ARMA_FIELDS,tang:ARMA_FIELDS,caceria:ARMA_FIELDS,reliquiasplanos:ARMA_FIELDS,soberanas:ARMA_FIELDS,antiguos:ARMA_FIELDS,artprimordiales:ARMA_FIELDS,elementos:[],primordiales:['plano','estado'],guerra:ERA_FIELDS,imperio:ERA_FIELDS,apocalipsis:ERA_FIELDS,ocaso:ERA_FIELDS,nuevomundo:ERA_FIELDS,despertar:ERA_FIELDS,tormenta:ERA_FIELDS,naciones:['capital','gobierno','lideres','guardian','antiguos','creencias','afiliacion','falla','estado'],criaturas:['estado','localizacion','idioma','subraza','primera','longevidad'],planos:['senor','encarnacion','ascension','habilidades','fallas','asociados'],dragones:['afiliacionplano','jinete']};
+const FIELD_LABELS={titulo:'Título',raza:'Raza',edad:'Edad',genero:'Género',elemento:'Elemento',ascension:'Ascensión',afiliacion:'Afiliación',estado:'Estado',allegados:'Allegados',creador:'Creador',portador:'Portador actual',tipo:'Tipo de Arma',categoria:'Categoría',capital:'Capital',gobierno:'Gobierno',lideres:'Líder/es',guardian:'Guardián',antiguos:'Antiguos Líderes',creencias:'Creencias',falla:'Falla de Plano',localizacion:'Localización',idioma:'Idioma',subraza:'Subraza',primera:'Primera Aparición',longevidad:'Longevidad',senor:'Señor de Plano',encarnacion:'Encarnación',habilidades:'Habilidades',fallas:'Fallas de Plano',asociados:'Artefactos asociados',afiliacionplano:'Afiliación de Plano',jinete:'Jinete',anos:'Años transcurridos',plano:'Plano'};
+const activeFields=()=>activeFieldsFor(NODES[detailNode]);
+const activeFieldsFor=n=>(n&&n.cats)||FIELD_SETS[view]||FIELD_IDS;
+let fieldsBuiltFor='';
+const fieldsSig=()=>view+'|'+activeFields().join(',');
+function buildFields(){const w=document.getElementById('detailFields');if(!w)return;w.innerHTML=activeFields().map(id=>'<div class="field"><label>'+FIELD_LABELS[id]+'</label><input id="f_'+id+'"></div>').join('');fieldsBuiltFor=fieldsSig()}
+const fval=id=>{const el=document.getElementById('f_'+id);return el?el.value:''};
+function paintFieldsView(o){const w=document.getElementById('detailFieldsView');if(!w)return;w.innerHTML=activeFields().map(id=>'<div class="frow"><b>'+FIELD_LABELS[id]+'</b><span>'+escHtml(o[id]||'—')+'</span></div>').join('')}
+function readFields(){let raw=lsGet(dfk());if(raw===null){const o=lsGet(oldfk());if(o!==null){raw=o;lsSet(dfk(),o)}}let o={};try{o=JSON.parse(raw||'{}')}catch(e){o={}}if(fieldsBuiltFor!==fieldsSig())buildFields();activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)el.value=o[id]||''});const hl=document.getElementById('f_headline'),hv=document.getElementById('headlineView');if(hl)hl.value=o.headline||'';if(hv){hv.textContent=o.headline||'';hv.hidden=!o.headline}paintFieldsView(o)}
+function saveFields(){let o={};try{o=JSON.parse(lsGet(dfk())||'{}')||{}}catch(e){o={}}activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)o[id]=el.value});const hl=document.getElementById('f_headline');if(hl)o.headline=hl.value;try{localStorage.setItem(dfk(),JSON.stringify(o));return true}catch(e){return false}}
+function paintDetailArt(){const n=NODES[detailNode],im=n&&safeImg(n.img);detailArt.innerHTML=im?'<img alt="'+attr(n.name)+'" src="'+im+'">':'<span>Imagen<br>clic para añadir</span>';const del=document.getElementById('detailImgDel');if(del)del.hidden=detailText.hidden||!im}
+function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function inlineSrc(id){return lsGet(inlineKey(id))}
+function inlineFmt(s){return s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>').replace(/(^|[^!])\[([^\]]+)\]\((https?:[^)\s"']+)\)/g,'$1<a href="$3" target="_blank" rel="noopener">$2</a>').replace(/!\[([^\]]*)\]\(img:([A-Za-z0-9_-]+)(?:\|([^)]*))?\)/g,(m,alt,id,opt)=>{const src=safeImg(inlineSrc(id));if(!src)return '<em>[imagen no encontrada]</em>';
+ let al='c',w=0;(opt||'').split('|').forEach(p=>{p=p.trim().toLowerCase();const pc=p.match(/^(\d{1,3})%$/);if(pc)w=Math.min(100,Math.max(10,+pc[1]));else if(/^(izq|izquierda|left)$/.test(p))al='L';else if(/^(der|dcha|derecha|right)$/.test(p))al='R';else if(/^(centro|center|c)$/.test(p))al='c'});
+ if(al!=='c'&&!w)w=50;
+ return '<img alt="'+attr(alt)+'" src="'+src+'"'+(al==='c'?'':' class="img-'+al+'"')+(w?' style="width:'+w+'%"':'')+'>'})}
+function renderMarkup(src){const out=[];let ul=false,qt=[],tb=[];
+ const closeUl=()=>{if(ul){out.push('</ul>');ul=false}};
+ const flushQ=()=>{if(qt.length){out.push('<blockquote>'+qt.map(l=>inlineFmt(l)).join('<br>')+'</blockquote>');qt=[]}};
+ const cellRow=r=>r.split('|').map(c=>c.trim()).filter((c,i,a)=>i>0||c!==''||a.length>1).filter(c=>c!=='');
+ const isSep=r=>{const c=cellRow(r);return c.length>0&&c.every(x=>/^:?-+:?$/.test(x))};
+ const flushT=()=>{if(!tb.length)return;let h=0;if(tb.length>1&&isSep(tb[1]))h=1;
+  out.push('<table>'+tb.filter((r,i)=>!(h&&i===1)).map((r,i)=>{const c=cellRow(r),t=(h&&i===0)?'th':'td';return '<tr>'+c.map(x=>'<'+t+'>'+inlineFmt(x)+'</'+t+'>').join('')+'</tr>'}).join('')+'</table>');tb=[]};
+ escHtml(src).split('\n').forEach(ln=>{const t=ln.trim();
+  if(/^&gt;\s?/.test(t)){closeUl();flushT();qt.push(t.replace(/^&gt;\s?/,''));return}
+  if(/^\|.*\|\s*$/.test(t)){closeUl();flushQ();tb.push(t);return}
+  flushQ();flushT();
+  if(/^###\s+/.test(t)){closeUl();out.push('<h4>'+inlineFmt(t.replace(/^###\s+/,''))+'</h4>')}
+  else if(/^##\s+/.test(t)){closeUl();out.push('<h3>'+inlineFmt(t.replace(/^##\s+/,''))+'</h3>')}
+  else if(/^#\s+/.test(t)){closeUl();out.push('<h2>'+inlineFmt(t.replace(/^#\s+/,''))+'</h2>')}
+  else if(/^---\s*$/.test(t)){closeUl();out.push('<hr>')}
+  else if(/^[-*]\s+/.test(t)){if(!ul){out.push('<ul>');ul=true}out.push('<li>'+inlineFmt(t.replace(/^[-*]\s+/,''))+'</li>')}
+  else if(t===''){closeUl()}
+  else{closeUl();out.push('<p>'+inlineFmt(ln)+'</p>')}});
+ closeUl();flushQ();flushT();return out.join('')}
+function readDetail(){let v=lsGet(dtk());if(v===null){const o=lsGet(oldtk());if(o!==null){v=o;lsSet(dtk(),o);
+ (o.match(/\(img:[A-Za-z0-9_-]+\)/g)||[]).forEach(t=>{const id=t.slice(5,-1),ok='enosi-inline-'+view+'-'+detailNode+'-'+id,nk=inlineKey(id);if(lsGet(nk)===null){const d=lsGet(ok);if(d!==null)lsSet(nk,d)}})}}if(v===null)v='';detailBody.innerHTML=renderMarkup(v);detailText.value=v}
+function setEditing(on){detailBody.hidden=on;detailText.hidden=!on;detailSave.hidden=!on;detailEdit.hidden=on;const pv=document.getElementById('detailPreview');if(pv){pv.hidden=!on;if(on)pv.innerHTML=renderMarkup(detailText.value)}const df=document.getElementById('detailFields');if(df)df.hidden=!on;const dv=document.getElementById('detailFieldsView');if(dv)dv.hidden=on;const hl=document.getElementById('f_headline'),hv=document.getElementById('headlineView');if(hl)hl.hidden=!on;if(hv)hv.hidden=on||!hv.textContent;const ib=document.getElementById('detailImgBtn');if(ib)ib.hidden=!on;const iib=document.getElementById('detailImgInline');if(iib)iib.hidden=!on;activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)el.disabled=!on});if(hl)hl.disabled=!on;paintDetailArt();if(on){editSnap=snapState();detailText.focus()}}
+let editSnap=null;
+const snapState=()=>detailText.value+'￾'+activeFields().map(fval).join('￾')+'￾'+((document.getElementById('f_headline')||{}).value||'');
+const isDirty=()=>editSnap!==null&&editSnap!==snapState()&&!detailText.hidden;
+function requestClose(){if(!detail.hidden&&!detailText.hidden&&isDirty()){askConfirm('Tienes cambios sin guardar. ¿Cerrar igualmente?',()=>closeDetail(),'Cerrar','Cambios sin guardar');return}closeDetail()}
+detailText.addEventListener('input',()=>{const pv=document.getElementById('detailPreview');if(pv&&!detailText.hidden)pv.innerHTML=renderMarkup(detailText.value)});
+function storeStats(){let b=0,n=0,k=0;try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key||key.indexOf('enosi-')!==0)continue;b+=(localStorage.getItem(key)||'').length;if(key.indexOf('enosi-autobk-')===0)k++;else n++}}catch(e){}return{b:b,n:n,k:k}}
+function paintMeter(){const m=document.getElementById('storeMeter');if(!m)return;const s=storeStats(),mb=s.b>1048576,sz=mb?(s.b/1048576).toFixed(1)+' MB':s.b<1024?s.b+' B':(s.b/1024).toFixed(0)+' KB';m.textContent=s.n+' datos'+(s.k?' · '+(s.k===1?'1 respaldo':s.k+' respaldos'):'')+' · '+sz;m.style.color=s.b>3670016?'#ff7b7b':''}
+function autoBackup(){try{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('enosi-')===0&&k.indexOf('enosi-autobk-')!==0&&k.indexOf('enosi-img-')!==0&&k.indexOf('enosi-inline-')!==0)o[k]=localStorage.getItem(k)}
+ localStorage.setItem('enosi-autobk-'+Date.now(),JSON.stringify(o));
+ const bk=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('enosi-autobk-')===0)bk.push(k)}
+ bk.sort();
+ const total=()=>{let t=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('enosi-')===0)t+=(localStorage.getItem(k)||'').length}}catch(e){}return t};
+ let keep=3;while(keep>1&&total()>3670016)keep--;
+ bk.slice(0,Math.max(0,bk.length-keep)).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}catch(e){}}
+function openDetail(i){detailNode=i;const n=NODES[i];detailTitle.textContent=n.name;detailTitle.style.color=safeColor(n.color);detailText.placeholder='Escribe aquí el texto de '+n.name+'…';
+ const bx=document.getElementById('detailBox');if(bx){bx.style.setProperty('--glow',n.color);bx.dataset.view=view}
+ readDetail();readFields();setEditing(false);paintMeter();
+ paintDetailArt();detail.hidden=false}
+function closeDetail(){const wasVacio=!detail.hidden&&VIEWS[view].layout==='vacio';detail.hidden=true;detailNode=-1;editSnap=null;if(wasVacio)goBack()}
+document.getElementById('detailClose').addEventListener('click',requestClose);
+detail.addEventListener('click',e=>{if(e.target===detail)requestClose()});
+detailEdit.addEventListener('click',()=>setEditing(true));
+detailSave.addEventListener('click',()=>{if(detailNode<0)return;let okT=true;try{localStorage.setItem(dtk(),detailText.value)}catch(e){okT=false}const okF=saveFields();if(!okT||!okF){alert('No se pudo guardar todo: almacenamiento lleno o bloqueado por el navegador. Usa Exportar para respaldar.');return}autoBackup();readDetail();readFields();setEditing(false);paintMeter();const st=document.getElementById('detailSaved');if(st){st.hidden=false;clearTimeout(st._t);st._t=setTimeout(()=>{st.hidden=true},2000)}});
+document.getElementById('detailExport').addEventListener('click',()=>{const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('enosi-')===0)o[k]=localStorage.getItem(k)}}catch(e){}
+ const b=new Blob([JSON.stringify(o)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='enosi-respaldo.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)});
+document.getElementById('detailImport').addEventListener('click',()=>document.getElementById('backupFile').click());
+document.getElementById('backupFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const o=JSON.parse(r.result);let n=0;Object.keys(o).forEach(k=>{if(k.indexOf('enosi-')===0){try{localStorage.setItem(k,o[k]);n++}catch(x){}}});loadImgs();readDetail();readFields();paintDetailArt();paintMeter();if(shown>=0)say(shown);alert('Respaldo cargado: '+n+' datos.')}catch(x){alert('Archivo no válido.')}};r.readAsText(f);e.target.value=''});
+const detailImgPick=()=>{if(detailNode>=0&&!detailText.hidden)fi.click()};
+document.getElementById('detailImgBtn').addEventListener('click',detailImgPick);
+detailArt.addEventListener('click',detailImgPick);
+document.getElementById('detailImgDel').addEventListener('click',()=>{if(detailNode<0)return;const n=NODES[detailNode];if(!n||!n.img)return;askConfirm('¿Quitar la imagen de "'+n.name+'"? El resto de la ficha no se toca.',()=>{n.img=null;try{localStorage.removeItem(ik(detailNode))}catch(e){}paintDetailArt();if(detail.hidden&&shown===detailNode)say(shown)})});
+// añadir nodo: botón separado + elección de hueco libre
+const addBox=document.getElementById('addbox'),addName=document.getElementById('addName'),addColors=document.getElementById('addColors'),addCustom=document.getElementById('addCustom');
+const PALETTE=['#ff3b3b','#ff6a00','#ff9a1f','#ffd94a','#fff2a8','#3ddc6b','#5aff2e','#2ea8ff','#b8dcff','#b45cff','#ff2e7e','#9aa4b2','#ffffff','#1a1a24'];
+let addColor=PALETTE[3];
+function paintSwatches(){addColors.innerHTML='';PALETTE.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='add-sw'+(c===addColor?' on':'');b.style.background=c;b.addEventListener('click',()=>{addColor=c;addCustom.value=c;paintSwatches()});addColors.appendChild(b)})}
+paintSwatches();
+addCustom.addEventListener('input',()=>{addColor=addCustom.value;paintSwatches()});
+function openAdd(h){addH=h;addName.value='';addBox.hidden=false;setTimeout(()=>addName.focus(),50)}
+function closeAdd(){addBox.hidden=true;addH=-1}
+document.getElementById('addCancel').addEventListener('click',closeAdd);
+addBox.addEventListener('click',e=>{if(e.target===addBox)closeAdd()});
+document.getElementById('addCreate').addEventListener('click',()=>{const nm=addName.value.trim();if(!nm){addName.focus();return}if(addH<0)return;
+ if(NODES.some(x=>slug(x.name)===slug(nm))){alert('Ya existe una placa con ese nombre en esta vista. Usa otro nombre para no compartir ficha.');addName.focus();return}
+ const node={name:nm,h:addH,color:addColor,text:'Contenido por definir.',detail:true,uid:'u'+Date.now()};
+ const arr=loadCustom(view);arr.push(node);
+ if(!saveCustom(view,arr)){alert('No se pudo guardar el nodo: almacenamiento lleno o bloqueado.');return}
+ closeAdd();picking=false;setView(view)});
+document.getElementById('detailImgInline').addEventListener('click',()=>{if(detailNode>=0&&!detailText.hidden)document.getElementById('inlineFile').click()});
+document.getElementById('inlineFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f||detailNode<0)return;const r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{const m=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*m;c.height=im.height*m;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  const u=c.toDataURL('image/jpeg',.82),id=String(Date.now()),k=inlineKey(id);
+  try{localStorage.setItem(k,u)}catch(x){alert('No cabe la imagen: almacenamiento lleno. Usa Exportar tras liberar espacio.');return}
+  const tok='![imagen](img:'+id+')',a=detailText.selectionStart||detailText.value.length,b=detailText.selectionEnd||a;
+  detailText.value=detailText.value.slice(0,a)+tok+detailText.value.slice(b);detailText.focus()};im.src=r.result};r.readAsDataURL(f);e.target.value=''});
+// imágenes: NODES[i].img acepta una imagen incrustada (data:image/...). También puedes hacer clic en el recuadro para elegir un archivo (solo se guarda en tu navegador).
+const fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+const ik=i=>'enosi-img-'+(view==='root'?'root':view)+'-'+slug(NODES[i]&&NODES[i].name);
+const oldik=i=>(view==='root'?'enosi-img-':'enosi-img-'+view+'-')+i;
+function loadImgs(){NODES.forEach((n,i)=>{if(!n.img){let v=lsGet(ik(i));if(v===null){const o=lsGet(oldik(i));if(o!==null){v=o;lsSet(ik(i),v)}}if(v!==null){const s=safeImg(v);if(s)n.img=s}}})}
+loadImgs();
+fi.addEventListener('change',()=>{const f=fi.files[0];const target=detail.hidden?shown:detailNode;const tn=NODES[target];if(!f||target<0||!tn)return;const k=target,r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{const m=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*m;c.height=im.height*m;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  const u=c.toDataURL('image/jpeg',.82);NODES[k].img=u;let okImg=true;try{localStorage.setItem(ik(k),u)}catch(e){okImg=false}if(detail.hidden){if(shown===k)say(k)}else paintDetailArt();if(!okImg)alert('Imagen visible solo esta sesión: almacenamiento lleno. Usa Exportar tras liberar espacio.')};im.src=r.result};r.readAsDataURL(f);fi.value=''});
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

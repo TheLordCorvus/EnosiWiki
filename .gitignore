@@ -9,3 +9,8 @@ Thumbs.db
 enosi-respaldo*.json
 
 .vscode/
+
+# Proyectos ajenos a la wiki (comparten carpeta, no van al repo)
+PokerNight/
+tests/
+
