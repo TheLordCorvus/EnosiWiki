@@ -96,10 +96,17 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 #detailBox[data-view="criaturas"] .frow span{font-size:12px}
 .frow span{font:500 17px/1.4 "Cormorant Garamond",Georgia,serif;letter-spacing:0;opacity:1;text-transform:none}
 @media(max-width:899px){#detail{flex-direction:column;overflow-y:auto;overflow-x:hidden}}
+#authbox{position:fixed;top:14px;right:16px;z-index:60;display:flex;gap:8px;align-items:center;justify-content:flex-end;max-width:70vw}
+#authbox .who{font:700 11px Cinzel,Georgia,serif;letter-spacing:.04em;color:#9fb4d8;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#authbtn,#pubb{font:700 11px Cinzel,Georgia,serif;letter-spacing:.06em;padding:7px 12px;color:var(--fg);background:rgba(11,18,48,.82);border:1px solid var(--edge);border-radius:999px;cursor:pointer;backdrop-filter:blur(6px)}
+#authbtn:hover,#pubb:hover{background:rgba(95,143,208,.22)}
+#pubb{display:none;border-color:#3ddc6b}
+body.editor #pubb{display:inline-block}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="authbox"><span class="who" id="authwho"></span><button id="pubb" type="button" title="Sube tu copia local y sustituye lo publicado en la nube">Publicar todo</button><button id="authbtn" type="button">Entrar</button></div>
 <div id="info"><b>Enosi</b><span>Toca una placa del caparazón para explorarla.</span></div>
 <div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><button id="detailEdit" type="button">Editar</button></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
 <div id="addbox" hidden><div class="add-form"><h2>Nueva placa</h2><label>Nombre</label><input type="text" id="addName" maxlength="60" placeholder="Nombre del nodo"><label>Color</label><div class="add-colors" id="addColors"></div><label>O personalizado</label><input type="color" id="addCustom" value="#5f8fd0"><div class="detail-row"><button id="addCreate" type="button">Crear</button><button id="addCancel" type="button">Cancelar</button></div></div></div>
@@ -548,7 +555,8 @@ function size(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c
  neb=document.createElement('canvas');neb.width=W;neb.height=H;const n=neb.getContext('2d');n.fillStyle='#050817';n.fillRect(0,0,W,H);
  [[.2,.25,.5,'90,40,160,.32'],[.8,.7,.55,'20,110,140,.26'],[.55,.5,.6,'60,50,150,.22'],[.85,.15,.35,'160,50,120,.18']].forEach(a=>{const r=a[2]*Math.max(W,H),gr=n.createRadialGradient(a[0]*W,a[1]*H,0,a[0]*W,a[1]*H,r);gr.addColorStop(0,'rgba('+a[3]+')');gr.addColorStop(1,'rgba(0,0,0,0)');n.fillStyle=gr;n.fillRect(0,0,W,H)})}
 addEventListener('resize',size);size();
-let hover=-1,pin=-1,picking=false,deleting=false,addH=-1;
+let hover=-1,pin=-1,picking=false,deleting=false,addH=-1,EDITOR=false;
+function setEditor(v){EDITOR=!!v;document.body.classList.toggle('editor',EDITOR);if(!EDITOR&&typeof detailText!=='undefined'&&!detailText.hidden)setEditing(false);const dd=document.getElementById('detail'),de=document.getElementById('detailEdit');if(dd&&de&&!dd.hidden&&detailText.hidden)de.hidden=!EDITOR;say(shown>=0?shown:-1)}
 function measInfo(){if(infoR)return;try{infoR=document.getElementById('info').getBoundingClientRect()}catch(e){infoR=null}}
 const P=(x,y)=>[cx+x*s,cy+y*s*.92+(reduce?0:Math.sin(perf/1400)*3)];let perf=0;
 function hexPath(i){const ids=HV[i];ctx.beginPath();ids.forEach((k,j)=>{const v=V.get(k),p=P(v.x,v.y);j?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath()}
@@ -689,7 +697,7 @@ document.getElementById('confirmNo').addEventListener('click',()=>closeConfirm(f
 function loadCustom(k){try{const a=JSON.parse(localStorage.getItem('enosi-custom-'+k)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function saveCustom(k,a){try{localStorage.setItem('enosi-custom-'+k,JSON.stringify(a));return true}catch(e){return false}}
 let shown=-1;
-function say(i){shown=i;measInfo();const hint=isOrion()?'Toca una estrella para explorarla.':isVacio()?'Ficha de lectura.':'Toca una placa del caparazón para explorarla.';const bb=(view!=='root')?'<button class="backbtn" type="button">← Volver</button>':'';const shell=!isOrion()&&!isVacio()&&view!=='root'&&freeCells().length>0;const ab=shell?'<button class="addbtn" type="button">'+(picking?'✕ Cancelar':'＋ Añadir')+'</button>':'';
+function say(i){shown=i;measInfo();const hint=isOrion()?'Toca una estrella para explorarla.':isVacio()?'Ficha de lectura.':'Toca una placa del caparazón para explorarla.';const bb=(view!=='root')?'<button class="backbtn" type="button">← Volver</button>':'';const shell=!isOrion()&&!isVacio()&&view!=='root'&&freeCells().length>0&&EDITOR;const ab=shell?'<button class="addbtn" type="button">'+(picking?'✕ Cancelar':'＋ Añadir')+'</button>':'';
  const db=(shell&&picking)?'<button class="delbtn" type="button">'+(deleting?'✓ Listo':'－ Eliminar')+'</button>':'';
  const ph=(picking&&deleting&&i>=0&&NODES[i]&&!NODES[i].uid)?'Placa original del caparazón: no se puede eliminar.':(picking?(deleting?'Elige la placa propia a eliminar.':'Elige una placa vacía resaltada.'):hint);
  if(i<0){info.innerHTML=bb+ab+db+'<b>'+VIEWS[view].title+'</b><span>'+ph+'</span>';return}const n=NODES[i],blocked=picking&&deleting&&!n.uid;
@@ -698,7 +706,7 @@ function say(i){shown=i;measInfo();const hint=isOrion()?'Toca una estrella para 
 cv.addEventListener('pointermove',e=>{if(trans)return;const i=pick(e);if(i!==hover){hover=i;cv.style.cursor=i>=0?'pointer':'default';say(i>=0?i:pin)}});
 cv.addEventListener('pointerdown',e=>{if(trans||!detail.hidden)return;if(!document.getElementById('confirmbox').hidden)return;if(picking){const h=cellPick(e);if(h>=0){const idx=NODES.findIndex(n=>n.h===h);if(idx<0){if(!deleting)openAdd(h)}else{const t=NODES[idx];if(deleting){if(t.uid)askConfirm('¿Eliminar "'+t.name+'"? Esta acción no se puede deshacer.',()=>{saveCustom(view,loadCustom(view).filter(x=>x.uid!==t.uid));setView(view)});else say(idx)}}}return}const i=pick(e);if(i<0){pin=-1;say(hover);return}hover=i;pin=i;say(i);const n=NODES[i];if(n.detail){openDetail(i);return}if(n.go)goView(n.go);else if(n.url)window.open(n.url,'_blank','noopener')});
 function goBack(){if(deleting){deleting=false;say(hover);return}if(picking){picking=false;addH=-1;say(hover);return}if(!detail.hidden){requestClose();return}if(view==='root'&&!vstack.length)return;const prev=vstack.pop()||'root';goView(prev,true)}
-info.addEventListener('click',e=>{if(e.target.closest('.backbtn')){goBack();return}if(e.target.closest('.addbtn')){togglePick();return}if(e.target.closest('.delbtn')){toggleDel();return}if(shown>=0&&e.target.closest('.art'))fi.click()});
+info.addEventListener('click',e=>{if(e.target.closest('.backbtn')){goBack();return}if(e.target.closest('.addbtn')){togglePick();return}if(e.target.closest('.delbtn')){toggleDel();return}if(shown>=0&&e.target.closest('.art')&&EDITOR)fi.click()});
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;const cb=document.getElementById('confirmbox');if(cb&&!cb.hidden){closeConfirm(false);return}goBack()});
 // ficha detalle Radomir: texto central + imagen a la derecha
 const detail=document.getElementById('detail'),detailTitle=document.getElementById('detailTitle'),detailBody=document.getElementById('detailBody'),detailText=document.getElementById('detailText'),detailArt=document.getElementById('detailArt'),detailEdit=document.getElementById('detailEdit'),detailSave=document.getElementById('detailSave');
@@ -709,6 +717,10 @@ const dtk=()=>'enosi-text-'+view+'-'+dName();const dfk=()=>'enosi-fields-'+view+
 const oldtk=()=>'enosi-text-'+view+'-'+detailNode;const oldfk=()=>'enosi-fields-'+view+'-'+detailNode;
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
+// puente con la nube: todo guardado local se replica si eres editor (ver NUBE al final)
+(function(){const si=Storage.prototype.setItem,ri=Storage.prototype.removeItem;
+ Storage.prototype.setItem=function(k,v){const r=si.apply(this,arguments);try{if(this===localStorage&&window.NUBE&&NUBE.guardar)NUBE.guardar(k,v)}catch(e){}return r};
+ Storage.prototype.removeItem=function(k){const r=ri.apply(this,arguments);try{if(this===localStorage&&window.NUBE&&NUBE.borrar)NUBE.borrar(k)}catch(e){}return r}})();
 const inlineKey=(id,nm)=>'enosi-inline-'+view+'-'+(nm||dName())+'-'+id;
 // migración puntual: ficha compartida de Timsah -> J.Timsah
 (function(){try{const re=/^enosi-(text|fields|img|inline)-ascendidos-timsah(-.*)?$/,cp=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&re.test(k))cp.push(k)}cp.forEach(k=>{const nk=k.replace('-ascendidos-timsah','-ascendidos-j-timsah');if(lsGet(nk)===null){const v=lsGet(k);if(v!==null)lsSet(nk,v)}})}catch(e){}})();
@@ -754,7 +766,7 @@ function renderMarkup(src){const out=[];let ul=false,qt=[],tb=[];
  closeUl();flushQ();flushT();return out.join('')}
 function readDetail(){let v=lsGet(dtk());if(v===null){const o=lsGet(oldtk());if(o!==null){v=o;lsSet(dtk(),o);
  (o.match(/\(img:[A-Za-z0-9_-]+\)/g)||[]).forEach(t=>{const id=t.slice(5,-1),ok='enosi-inline-'+view+'-'+detailNode+'-'+id,nk=inlineKey(id);if(lsGet(nk)===null){const d=lsGet(ok);if(d!==null)lsSet(nk,d)}})}}if(v===null)v='';detailBody.innerHTML=renderMarkup(v);detailText.value=v}
-function setEditing(on){detailBody.hidden=on;detailText.hidden=!on;detailSave.hidden=!on;detailEdit.hidden=on;const pv=document.getElementById('detailPreview');if(pv){pv.hidden=!on;if(on)pv.innerHTML=renderMarkup(detailText.value)}const df=document.getElementById('detailFields');if(df)df.hidden=!on;const dv=document.getElementById('detailFieldsView');if(dv)dv.hidden=on;const hl=document.getElementById('f_headline'),hv=document.getElementById('headlineView');if(hl)hl.hidden=!on;if(hv)hv.hidden=on||!hv.textContent;const ib=document.getElementById('detailImgBtn');if(ib)ib.hidden=!on;const ipb=document.getElementById('detailImgPath');if(ipb)ipb.hidden=!on;const iib=document.getElementById('detailImgInline');if(iib)iib.hidden=!on;activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)el.disabled=!on});if(hl)hl.disabled=!on;paintDetailArt();if(on){editSnap=snapState();detailText.focus()}}
+function setEditing(on){if(on&&!EDITOR)return;detailBody.hidden=on;detailText.hidden=!on;detailSave.hidden=!on;detailEdit.hidden=on||!EDITOR;const pv=document.getElementById('detailPreview');if(pv){pv.hidden=!on;if(on)pv.innerHTML=renderMarkup(detailText.value)}const df=document.getElementById('detailFields');if(df)df.hidden=!on;const dv=document.getElementById('detailFieldsView');if(dv)dv.hidden=on;const hl=document.getElementById('f_headline'),hv=document.getElementById('headlineView');if(hl)hl.hidden=!on;if(hv)hv.hidden=on||!hv.textContent;const ib=document.getElementById('detailImgBtn');if(ib)ib.hidden=!on;const ipb=document.getElementById('detailImgPath');if(ipb)ipb.hidden=!on;const iib=document.getElementById('detailImgInline');if(iib)iib.hidden=!on;activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)el.disabled=!on});if(hl)hl.disabled=!on;paintDetailArt();if(on){editSnap=snapState();detailText.focus()}}
 let editSnap=null;
 const snapState=()=>detailText.value+'￾'+activeFields().map(fval).join('￾')+'￾'+((document.getElementById('f_headline')||{}).value||'');
 const isDirty=()=>editSnap!==null&&editSnap!==snapState()&&!detailText.hidden;
@@ -771,7 +783,7 @@ function autoBackup(){try{const o={};for(let i=0;i<localStorage.length;i++){cons
  bk.slice(0,Math.max(0,bk.length-keep)).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}catch(e){}}
 function openDetail(i){detailNode=i;const n=NODES[i];detailTitle.textContent=n.name;detailTitle.style.color=safeColor(n.color);detailText.placeholder='Escribe aquí el texto de '+n.name+'…';
  const bx=document.getElementById('detailBox');if(bx){bx.style.setProperty('--glow',n.color);bx.dataset.view=view}
- readDetail();readFields();setEditing(false);paintMeter();
+ readDetail();readFields();setEditing(false);detailEdit.hidden=!EDITOR;paintMeter();
  paintDetailArt();detail.hidden=false}
 function closeDetail(){const wasVacio=!detail.hidden&&VIEWS[view].layout==='vacio';detail.hidden=true;detailNode=-1;editSnap=null;if(wasVacio)goBack()}
 document.getElementById('detailClose').addEventListener('click',requestClose);
@@ -810,6 +822,7 @@ document.getElementById('inlineFile').addEventListener('change',e=>{const f=e.ta
  r.onload=()=>{const im=new Image();im.onload=()=>{const m=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*m;c.height=im.height*m;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
   const u=c.toDataURL('image/jpeg',.82),id=String(Date.now()),k=inlineKey(id);
   try{localStorage.setItem(k,u)}catch(x){alert('No cabe la imagen: almacenamiento lleno. Usa Exportar tras liberar espacio.');return}
+  if(window.NUBE&&NUBE.activo&&NUBE.activo())NUBE.subirImagen(u,view+'/'+dName()+'/inline-'+id+'.jpg').then(url=>{if(!url)return;try{localStorage.setItem(k,url)}catch(e){}});
   const tok='![imagen](img:'+id+')',a=detailText.selectionStart||detailText.value.length,b=detailText.selectionEnd||a;
   detailText.value=detailText.value.slice(0,a)+tok+detailText.value.slice(b);detailText.focus()};im.src=r.result};r.readAsDataURL(f);e.target.value=''});
 // imágenes: NODES[i].img acepta una imagen incrustada (data:image/...). También puedes hacer clic en el recuadro para elegir un archivo (solo se guarda en tu navegador).
@@ -820,8 +833,71 @@ function loadImgs(){NODES.forEach((n,i)=>{if(!n.img){let v=lsGet(ik(i));if(v===n
 loadImgs();
 fi.addEventListener('change',()=>{const f=fi.files[0];const target=detail.hidden?shown:detailNode;const tn=NODES[target];if(!f||target<0||!tn)return;const k=target,r=new FileReader();
  r.onload=()=>{const im=new Image();im.onload=()=>{const m=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*m;c.height=im.height*m;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
-  const u=c.toDataURL('image/jpeg',.82);NODES[k].img=u;let okImg=true;try{localStorage.setItem(ik(k),u)}catch(e){okImg=false}if(detail.hidden){if(shown===k)say(k)}else paintDetailArt();if(!okImg)alert('Imagen visible solo esta sesión: almacenamiento lleno. Usa Exportar tras liberar espacio.')};im.src=r.result};r.readAsDataURL(f);fi.value=''});
+  const u=c.toDataURL('image/jpeg',.82),kk=ik(k);NODES[k].img=u;let okImg=true;try{localStorage.setItem(kk,u)}catch(e){okImg=false}if(detail.hidden){if(shown===k)say(k)}else paintDetailArt();if(!okImg)alert('Imagen visible solo esta sesión: almacenamiento lleno. Usa Exportar tras liberar espacio.');
+  if(window.NUBE&&NUBE.activo&&NUBE.activo())NUBE.subirImagen(u,(view==='root'?'root':view)+'/'+slug(tn.name)+'/'+Date.now()+'.jpg').then(url=>{if(!url)return;NODES[k].img=url;try{localStorage.setItem(kk,url)}catch(e){};if(detail.hidden){if(shown===k)say(k)}else paintDetailArt()})};im.src=r.result};r.readAsDataURL(f);fi.value=''});
 requestAnimationFrame(frame);
+</script>
+<!-- ===== Nube: Firebase (lectura pública; edición solo cuentas autorizadas) ===== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script>
+(function(){
+ const cfg={apiKey:"AIzaSyDshPsS2UiXBFW6z_ydMtNTNCkymLwn6k",authDomain:"wiki-enosi.firebaseapp.com",projectId:"wiki-enosi",storageBucket:"wiki-enosi.firebasestorage.app",messagingSenderId:"956108241014",appId:"1:956108241014:web:3d59ee502af9d909698757"};
+ if(typeof firebase==='undefined'){console.warn('Firebase no cargó: la wiki sigue en modo local.');return}
+ let app,db,auth,storage,editor=false,aplicando=false,ready=false,docExiste=false,cargaOk=false,avisado=false,pidiendo=false;
+ try{
+  app=firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth();storage=firebase.storage();ready=true;
+ }catch(e){console.warn('Firebase no disponible:',e);return}
+ const docRef=()=>db.doc('wiki/contenido');
+ const FV=firebase.firestore.FieldValue;
+ const keyOk=k=>typeof k==='string'&&k.indexOf('enosi-')===0&&k.indexOf('enosi-autobk-')!==0;
+ function syncable(k,v){if(!ready||!editor||aplicando)return false;if(!keyOk(k))return false;if(v!=null&&String(v).indexOf('data:image/')===0)return false;return true}
+ const pend={};let tmr=null;
+ function guardar(k,v){if(!syncable(k,v))return;pend[k]=String(v);clearTimeout(tmr);tmr=setTimeout(flush,700)}
+ function borrar(k){if(!syncable(k,''))return;delete pend[k];docRef().set({datos:{[k]:FV.delete()}},{merge:true}).catch(e=>console.warn('No se pudo borrar en la nube:',e))}
+ async function flush(){const p=pend;for(const k in p)delete pend[k];if(!Object.keys(p).length)return;try{await docRef().set({datos:p,actualizado:FV.serverTimestamp()},{merge:true})}catch(e){console.warn('No se pudo guardar en la nube:',e)}}
+ async function subirImagen(dataUrl,path){if(!editor||!auth.currentUser)return null;try{const blob=await (await fetch(dataUrl)).blob();const r=storage.ref('wiki/'+path);await r.put(blob,{contentType:blob.type||'image/jpeg'});return await r.getDownloadURL()}catch(e){console.warn('No se pudo subir la imagen:',e);return null}}
+ function refrescar(){try{const abierto=!detail.hidden,dn=detailNode,editando=!detailText.hidden;if(editando&&isDirty&&isDirty())return;setView(view);if(abierto&&dn>=0&&NODES[dn])openDetail(dn)}catch(e){}}
+ async function cargar(){
+  try{const s=await docRef().get();docExiste=s.exists;cargaOk=true;if(!docExiste)return;
+   const d=s.data().datos||{};aplicando=true;
+   Object.keys(d).forEach(k=>{if(!keyOk(k)||typeof d[k]!=='string')return;try{localStorage.setItem(k,d[k])}catch(e){}});
+   aplicando=false;refrescar();
+  }catch(e){console.warn('No se pudo leer la nube:',e)}
+ }
+ let cargaP=cargar();
+ async function publicar(){
+  if(!editor)return alert('Inicia sesión como editor para publicar.');
+  const keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keyOk(k))keys.push(k)}}catch(e){}
+  if(!keys.length)return alert('No hay datos que publicar.');
+  if(!confirm('Se subirá tu contenido actual a la nube y sustituirá lo ya publicado.\n\n¿Continuar?'))return;
+  const datos={};let n=0,imgs=0;
+  for(const k of keys){let v=localStorage.getItem(k);if(v==null)continue;
+   if(v.indexOf('data:image/')===0){const u=await subirImagen(v,'migracion/'+Date.now()+'-'+(++imgs)+'.jpg');if(!u)continue;v=u;try{localStorage.setItem(k,u)}catch(e){}}
+   datos[k]=v;n++;
+  }
+  const size=JSON.stringify(datos).length;
+  if(size>900000)return alert('Demasiado contenido para un solo documento ('+Math.round(size/1024)+' KB).');
+  try{await docRef().set({datos,actualizado:FV.serverTimestamp()});docExiste=true;alert('Publicado: '+n+' datos ('+Math.round(size/1024)+' KB).')}catch(e){alert('No se pudo publicar: '+e.message)}
+ }
+ function ui(u){const b=document.getElementById('authbtn'),w=document.getElementById('authwho');if(!b)return;b.textContent=u?'Salir':'Entrar';w.textContent=u?(u.displayName||u.email||''):'';w.title=u?(u.email||''):''}
+ async function revisar(u){
+  editor=false;if(typeof setEditor==='function')setEditor(false);
+  if(!u){ui(null);return}
+  ui(u);
+  try{await cargaP;const s=await db.doc('editores/'+u.uid).get();editor=s.exists}catch(e){editor=false}
+  if(typeof setEditor==='function')setEditor(editor);
+  if(!editor&&!avisado){avisado=true;alert('Tu cuenta no tiene permisos de edición.\n\nUID: '+u.uid+'\n\nPide que añadan ese UID a la colección "editores" de Firestore.')}
+  else if(editor&&cargaOk&&!docExiste&&!pidiendo){pidiendo=true;if(confirm('Eres editor. ¿Publicar tu contenido actual en la nube?'))publicar()}
+  ui(u);
+ }
+ auth.onAuthStateChanged(revisar);
+ document.getElementById('authbtn').addEventListener('click',()=>{if(auth.currentUser){auth.signOut()}else{const p=new firebase.auth.GoogleAuthProvider();auth.signInWithPopup(p).catch(e=>alert('No se pudo iniciar sesión: '+e.message))}});
+ document.getElementById('pubb').addEventListener('click',publicar);
+ window.NUBE={guardar,borrar,syncable,subirImagen,publicar,activo:()=>ready&&editor};
+})();
 </script>
 </body>
 </html>
