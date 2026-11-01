@@ -899,34 +899,5 @@ requestAnimationFrame(frame);
  window.NUBE={guardar,borrar,syncable,subirImagen,publicar,activo:()=>ready&&editor};
 })();
 </script>
-
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-
-  const firebaseConfig = {
-   apiKey: "AIzaSyDshPrS2UiXBfW6z_ydMTnMTNCkymLwn6k",
-   authDomain: "wiki-enosi.firebaseapp.com",
-   projectId: "wiki-enosi",
-   storageBucket: "wiki-enosi.firebasestorage.app",
-   messagingSenderId: "956108241014",
-   appId: "1:956108241014:web:3d59ee502af9d909698757"
- };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  btnLogin.onclick = () => signInWithPopup(auth, provider).catch(e => alert(e.code));
-  btnLogout.onclick = () => signOut(auth);
-
-  onAuthStateChanged(auth, (user) => {
-    btnLogin.style.display = user ? "none" : "";
-    btnLogout.style.display = user ? "" : "none";
-    userInfo.textContent = user ? `${user.displayName} · UID: ${user.uid}` : "";
-    if (user) console.log("UID:", user.uid);
-  });
-</script>
 </body>
 </html>
