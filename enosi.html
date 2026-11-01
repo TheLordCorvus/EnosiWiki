@@ -796,7 +796,7 @@ document.getElementById('detailExport').addEventListener('click',()=>{const o={}
 document.getElementById('detailImport').addEventListener('click',()=>document.getElementById('backupFile').click());
 document.getElementById('backupFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
  r.onload=()=>{try{const o=JSON.parse(r.result);let n=0;Object.keys(o).forEach(k=>{if(k.indexOf('enosi-')===0){try{localStorage.setItem(k,o[k]);n++}catch(x){}}});loadImgs();readDetail();readFields();paintDetailArt();paintMeter();if(shown>=0)say(shown);alert('Respaldo cargado: '+n+' datos.')}catch(x){alert('Archivo no válido.')}};r.readAsText(f);e.target.value=''});
-const detailImgPick=()=>{if(detailNode>=0&&!detailText.hidden)fi.click()};
+const detailImgPick=()=>{if(detailNode<0||!EDITOR)return;if(detailText.hidden)setEditing(true);fi.click()};
 document.getElementById('detailImgBtn').addEventListener('click',detailImgPick);
 document.getElementById('detailImgPath').addEventListener('click',()=>{if(detailNode<0)return;const n=NODES[detailNode];if(!n)return;const raw=prompt('Archivo de la carpeta Images (ej. espada-cromatica.png):','');if(raw===null)return;const name=String(raw).trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^.*[\\/]/,'').replace(/\s+/g,'-');if(!/^[A-Za-z0-9._-]+\.(png|jpe?g|webp|gif|avif)$/i.test(name)){alert('Nombre no válido. Usa letras sin acentos, números, guiones o guiones bajos, y extensión .png, .jpg, .webp, .gif o .avif.');return}const p='Images/'+name;n.img=p;try{localStorage.setItem(ik(detailNode),p)}catch(e){}paintDetailArt();if(detail.hidden&&shown===detailNode)say(shown)});
 detailArt.addEventListener('click',detailImgPick);
