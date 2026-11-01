@@ -887,9 +887,9 @@ requestAnimationFrame(frame);
   editor=false;if(typeof setEditor==='function')setEditor(false);
   if(!u){ui(null);return}
   ui(u);
-  try{await cargaP;const s=await db.doc('editores/'+u.uid).get();editor=s.exists}catch(e){editor=false}
+  try{await cargaP;const s=await db.doc('editors/'+u.uid).get();editor=s.exists}catch(e){editor=false}
   if(typeof setEditor==='function')setEditor(editor);
-  if(!editor&&!avisado){avisado=true;alert('Tu cuenta no tiene permisos de edición.\n\nUID: '+u.uid+'\n\nPide que añadan ese UID a la colección "editores" de Firestore.')}
+  if(!editor&&!avisado){avisado=true;alert('Tu cuenta no tiene permisos de edición.\n\nUID: '+u.uid+'\n\nPide que añadan ese UID a la colección "editors" de Firestore.')}
   else if(editor&&cargaOk&&!docExiste&&!pidiendo){pidiendo=true;if(confirm('Eres editor. ¿Publicar tu contenido actual en la nube?'))publicar()}
   ui(u);
  }
