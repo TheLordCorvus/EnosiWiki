@@ -924,12 +924,19 @@ function runSearch(q){
  const {terms,phrase}=qTerms(q);if(!terms.length)return[];
  const out=[];
  for(const e of buildSearchIndex()){
+  const hay=e.nameF+' '+e.fields.map(f=>f.fold).join(' ')+' '+e.bodyF+' '+e.descF;
+  if(!hits(hay,terms))continue;
   const src=[];let score=0;
   const ns=nameHit(e.nameF,terms,phrase);
   if(ns){src.push({type:'name',label:'Nombre',score:ns});score=Math.max(score,ns)}
-  for(const f of e.fields){if(hits(f.fold,terms)){const c=occ(f.fold,terms,phrase);src.push({type:'field',id:f.id,label:f.label,text:f.value,count:c,score:520});score=Math.max(score,520)}}
-  if(e.bodyF&&hits(e.bodyF,terms)){const c=occ(e.bodyF,terms,phrase),sc=400+Math.min(10,c)*8;src.push({type:'body',label:'Texto',text:e.body,count:c,score:sc});score=Math.max(score,sc)}
-  if(e.descF&&hits(e.descF,terms)){const c=occ(e.descF,terms,phrase);src.push({type:'desc',label:'Descripción',text:e.desc,count:c,score:100});score=Math.max(score,100)}
+  else if(terms.some(t=>e.nameF.indexOf(t)>=0)){src.push({type:'name',label:'Nombre',score:300});score=Math.max(score,300)}
+  for(const f of e.fields){
+   const any=terms.some(t=>f.fold.indexOf(t)>=0);if(!any)continue;
+   const all=hits(f.fold,terms),c=occ(f.fold,terms,phrase),sc=all?520:260;
+   src.push({type:'field',id:f.id,label:f.label,text:f.value,count:c,score:sc});score=Math.max(score,sc);
+  }
+  if(e.bodyF&&terms.some(t=>e.bodyF.indexOf(t)>=0)){const all=hits(e.bodyF,terms),c=occ(e.bodyF,terms,phrase),sc=all?400+Math.min(10,c)*8:220;src.push({type:'body',label:'Texto',text:e.body,count:c,score:sc});score=Math.max(score,sc)}
+  if(e.descF&&terms.some(t=>e.descF.indexOf(t)>=0)){const all=hits(e.descF,terms),c=occ(e.descF,terms,phrase),sc=all?100:80;src.push({type:'desc',label:'Descripción',text:e.desc,count:c,score:sc});score=Math.max(score,sc)}
   if(!src.length)continue;
   out.push({e,sources:src.sort((a,b)=>b.score-a.score),score:score+(src.length-1)*12});
  }
