@@ -35,7 +35,7 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 #confirmbox[hidden]{display:none}
 .confirm-box{width:min(380px,92vw);background:rgba(11,18,48,.95);border:1px solid var(--edge);border-radius:16px;padding:18px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;text-align:center}
 .confirm-box h2{margin:0;font:700 16px Cinzel,Georgia,serif;letter-spacing:.06em}
-.confirm-box p{margin:0;font:500 16px/1.45 "Cormorant Garamond",Georgia,serif}
+.confirm-box p{margin:0;font:500 16px/1.45 "Cormorant Garamond",Georgia,serif;white-space:pre-wrap;overflow-wrap:anywhere;max-height:46vh;overflow:auto}
 #addbox{position:fixed;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
 #addbox[hidden]{display:none}
 .add-form{width:min(380px,92vw);background:rgba(11,18,48,.95);border:1px solid var(--edge);border-radius:16px;padding:18px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
@@ -151,7 +151,7 @@ mark.srchit{background:rgba(95,143,208,.42);color:#fff;border-radius:3px;padding
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="authbox"><span class="who" id="authwho"></span><button id="pubb" type="button" title="Sube tu copia local y sustituye lo publicado en la nube">Publicar todo</button><button id="authbtn" type="button">Entrar</button></div>
+<div id="authbox"><span class="who" id="authwho"></span><button id="pubb" type="button" title="Publica tu copia local; antes se compara con la nube y se descarga una copia de seguridad">Publicar todo</button><button id="authbtn" type="button">Entrar</button></div>
 <div id="zoombox"><button id="zin" type="button" aria-label="Acercar">+</button><button id="zout" type="button" aria-label="Alejar">−</button><button id="zfit" type="button" class="small" aria-label="Ver todo">TODO</button></div>
 <button id="searchbtn" type="button" aria-label="Buscar en la wiki" title="Buscar (Ctrl/Cmd+K)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg></button>
 <div id="info"><b>Enosi</b><span>Toca una placa del caparazón para explorarla.</span></div>
@@ -1158,19 +1158,69 @@ requestAnimationFrame(frame);
   }catch(e){console.warn('No se pudo leer la nube:',e)}
  }
  let cargaP=cargar();
- async function publicar(){
-  if(!editor)return alert('Inicia sesión como editor para publicar.');
-  const keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keyOk(k))keys.push(k)}}catch(e){}
-  if(!keys.length)return alert('No hay datos que publicar.');
-  if(!confirm('Se subirá tu contenido actual a la nube y sustituirá lo ya publicado.\n\n¿Continuar?'))return;
+ function selloRespaldo(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'-'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds())}
+ function descargarRespaldoNube(prev){
+  const nombre='enosi-nube-antes-de-publicar-'+selloRespaldo()+'.json';
+  try{
+   const b=new Blob([JSON.stringify(prev,null,2)],{type:'application/json'}),a=document.createElement('a');
+   a.href=URL.createObjectURL(b);a.download=nombre;document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(a.href),4000);return nombre;
+  }catch(e){console.warn('No se pudo descargar la copia de la nube:',e);return ''}
+ }
+ function guardarRespaldoLocal(prev){
+  try{localStorage.setItem('enosi-autobk-'+Date.now(),JSON.stringify(prev));return true}catch(e){console.warn('No se pudo guardar la copia local de la nube:',e);return false}
+ }
+ function listaClaves(ks,max){
+  const n=ks.slice(0,max||10).map(k=>'• '+k).join('\n');
+  return ks.length>(max||10)?n+'\n• … y '+(ks.length-(max||10))+' más':n;
+ }
+ function cuentaDatos(n){return n+' dato'+(n===1?'':'s')}
+ function mismosDatos(a,b){
+  const ak=Object.keys(a).filter(keyOk),bk=Object.keys(b).filter(keyOk);
+  if(ak.length!==bk.length)return false;
+  return ak.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&a[k]===b[k]);
+ }
+ async function ejecutarPublicacion(keys,prev){
+  const prevKeys=Object.keys(prev).filter(keyOk);
+  let copia='';
+  if(prevKeys.length){
+   const archivo=descargarRespaldoNube(prev),local=guardarRespaldoLocal(prev);
+   if(!archivo&&!local)return alert('No se pudo guardar una copia de la nube anterior. Publicación cancelada para evitar perder datos.');
+   copia=archivo&&local?'\n\nCopia de la nube anterior: '+archivo+' (también guardada en este navegador).':archivo?'\n\nCopia de la nube anterior: '+archivo+'.':'\n\nCopia de la nube anterior guardada en este navegador.';
+  }
   const datos={};let n=0,imgs=0;
-  for(const k of keys){let v=localStorage.getItem(k);if(v==null)continue;
-   if(v.indexOf('data:image/')===0){const u=await subirImagen(v,'migracion/'+Date.now()+'-'+(++imgs)+'.jpg');if(!u)continue;v=u;try{localStorage.setItem(k,u)}catch(e){}}
+  for(const k of keys){let v=localStorage.getItem(k);if(v==null)return alert('Un dato desapareció mientras preparabas la publicación. No se ha modificado la nube.'+copia);
+   if(v.indexOf('data:image/')===0){const u=await subirImagen(v,'migracion/'+Date.now()+'-'+(++imgs)+'.jpg');if(!u)return alert('No se pudo subir una imagen. Publicación cancelada: la nube NO se ha modificado.'+copia);v=u;try{localStorage.setItem(k,u)}catch(e){}}
    datos[k]=v;n++;
   }
   const size=JSON.stringify(datos).length;
-  if(size>900000)return alert('Demasiado contenido para un solo documento ('+Math.round(size/1024)+' KB).');
-  try{await docRef().set({datos,actualizado:FV.serverTimestamp()});docExiste=true;alert('Publicado: '+n+' datos ('+Math.round(size/1024)+' KB).')}catch(e){alert('No se pudo publicar: '+e.message)}
+  if(size>900000)return alert('Demasiado contenido para un solo documento ('+Math.round(size/1024)+' KB). La nube NO se ha modificado.'+copia);
+  try{const s=await docRef().get({source:'server'}),actual=(s.data()&&s.data().datos)||{};if(!mismosDatos(prev,actual))return alert('La nube cambió mientras preparabas la publicación. No se ha modificado nada; vuelve a intentarlo.'+copia)}catch(e){return alert('No se pudo comprobar de nuevo la nube. Publicación cancelada para evitar perder datos.'+copia)}
+  try{await docRef().set({datos,actualizado:FV.serverTimestamp()});docExiste=true;alert('Publicado: '+cuentaDatos(n)+' ('+Math.round(size/1024)+' KB).'+(copia||'\n\nNo había datos previos en la nube.'))}catch(e){alert('No se pudo publicar: '+e.message+'\n\nLa nube no se ha sustituido.'+copia)}
+ }
+ async function publicar(){
+  if(!editor)return alert('Inicia sesión como editor para publicar.');
+  await cargaP;
+  const keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keyOk(k))keys.push(k)}}catch(e){}
+  if(!keys.length)return alert('No hay datos que publicar.');
+  let prev={};
+  try{const s=await docRef().get({source:'server'}),d=s.data()&&s.data().datos;if(d&&typeof d==='object'&&!Array.isArray(d))prev=d}catch(e){return alert('No se pudo comprobar el contenido actual de la nube. Publicación cancelada para evitar perder datos.')}
+  const prevKeys=Object.keys(prev).filter(keyOk);
+  const faltan=prevKeys.filter(k=>keys.indexOf(k)<0);
+  const nuevos=keys.filter(k=>prevKeys.indexOf(k)<0);
+  let msg='Nube: '+cuentaDatos(prevKeys.length)+'.\nEste navegador: '+cuentaDatos(keys.length)+' ('+nuevos.length+' nuevo'+(nuevos.length===1?'':'s')+').\n\n';
+  let titulo='Publicar todo',boton='Publicar';
+  if(faltan.length){
+   titulo='Atención: se borrarán datos';boton='Publicar y borrar datos';
+   msg+='⚠ La nube tiene '+faltan.length+' dato'+(faltan.length===1?'':'s')+' que este navegador NO tiene.\nSi publicas, se eliminarán de la nube:\n\n'+listaClaves(faltan)+'\n\n';
+   msg+='Antes de publicar se descargará una copia de la nube. Si no esperabas borrar esos datos, cancela y publica desde el navegador que los tenga.';
+  }else if(prevKeys.length){
+   boton='Descargar copia y publicar';
+   msg+='Se descargará una copia de la nube y después se sustituirá por el contenido de este navegador.';
+  }else{
+   msg+='La nube está vacía. Se publicará el contenido de este navegador.';
+  }
+  askConfirm(msg,()=>ejecutarPublicacion(keys,prev),boton,titulo);
  }
  function ui(u){const b=document.getElementById('authbtn'),w=document.getElementById('authwho');if(!b)return;b.textContent=u?'Salir':'Entrar';w.textContent=u?(u.displayName||u.email||''):'';w.title=u?(u.email||''):''}
  async function revisar(u){
@@ -1180,7 +1230,7 @@ requestAnimationFrame(frame);
   try{await cargaP;const s=await db.doc('editors/'+u.uid).get();editor=s.exists}catch(e){editor=false}
   if(typeof setEditor==='function')setEditor(editor);
   if(!editor&&!avisado){avisado=true;alert('Tu cuenta no tiene permisos de edición.\n\nUID: '+u.uid+'\n\nPide que añadan ese UID a la colección "editors" de Firestore.')}
-  else if(editor&&cargaOk&&!docExiste&&!pidiendo){pidiendo=true;if(confirm('Eres editor. ¿Publicar tu contenido actual en la nube?'))publicar()}
+  else if(editor&&cargaOk&&!docExiste&&!pidiendo){pidiendo=true;publicar()}
   ui(u);
  }
  auth.onAuthStateChanged(revisar);
