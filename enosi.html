@@ -47,7 +47,7 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 .add-sw.on{border-color:#fff}
 #info b{display:block;font:700 15px Cinzel,Georgia,serif;letter-spacing:.06em;margin-bottom:4px}
 #info span{font:500 17px/1.35 "Cormorant Garamond",Georgia,serif}
-#detail{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:16px;padding:20px;box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
+#detail{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px));box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
 #detail[hidden]{display:none}
 #detail [hidden]{display:none!important}
 .detail-main textarea[hidden],.detail-body[hidden]{display:none}
@@ -59,6 +59,8 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 .detail-main{display:flex;flex-direction:column;gap:10px;min-width:0}
 .detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .detail-head h2{margin:0;font:700 19px Cinzel,Georgia,serif;letter-spacing:.06em}
+.detail-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+#detailX{padding:8px 12px!important;font-size:17px;line-height:1;min-width:38px;min-height:38px}
 .detail-img-title h3{margin:0 0 8px;font:700 19px Cinzel,Georgia,serif;letter-spacing:.05em;text-align:center}
 .detail-img-title input{width:100%;background:#070d26;color:var(--fg);border:1px solid var(--edge);border-radius:8px;padding:6px 10px;font:700 17px Cinzel,Georgia,serif;letter-spacing:.04em;text-align:center;box-sizing:border-box}
 .detail-body{font:500 17px/1.5 "Cormorant Garamond",Georgia,serif;white-space:pre-wrap;overflow:visible}
@@ -97,19 +99,29 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 #detailBox[data-view="criaturas"] .frow span{font-size:12px}
 .frow span{font:500 17px/1.4 "Cormorant Garamond",Georgia,serif;letter-spacing:0;opacity:1;text-transform:none}
 @media(max-width:899px){#detail{flex-direction:column;overflow-y:auto;overflow-x:hidden}}
-#authbox{position:fixed;top:14px;right:16px;z-index:60;display:flex;gap:8px;align-items:center;justify-content:flex-end;max-width:70vw}
+#authbox{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:calc(16px + env(safe-area-inset-right,0px));z-index:4;display:flex;gap:8px;align-items:center;justify-content:flex-end;max-width:70vw}
 #authbox .who{font:700 11px Cinzel,Georgia,serif;letter-spacing:.04em;color:#9fb4d8;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #authbtn,#pubb{font:700 11px Cinzel,Georgia,serif;letter-spacing:.06em;padding:7px 12px;color:var(--fg);background:rgba(11,18,48,.82);border:1px solid var(--edge);border-radius:999px;cursor:pointer;backdrop-filter:blur(6px)}
 #authbtn:hover,#pubb:hover{background:rgba(95,143,208,.22)}
 #pubb{display:none;border-color:#3ddc6b}
 body.editor #pubb{display:inline-block}
+#zoombox{display:none}
+@media(max-width:899px){
+ #zoombox{display:flex;position:fixed;left:10px;top:38%;transform:translateY(-50%);z-index:4;flex-direction:column;gap:8px}
+ #zoombox button{width:38px;height:38px;padding:0;border-radius:50%;background:rgba(11,18,48,.82);color:var(--fg);border:1px solid var(--edge);font:700 18px/1 Cinzel,Georgia,serif;cursor:pointer;backdrop-filter:blur(6px)}
+ #zoombox button:active{background:rgba(95,143,208,.3)}
+ #zoombox button.small{font-size:10px;letter-spacing:.04em}
+ #info{max-height:44vh;overflow-y:auto}
+ .field input,.detail-img-title input,.add-form input[type=text]{font-size:16px}
+}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="authbox"><span class="who" id="authwho"></span><button id="pubb" type="button" title="Sube tu copia local y sustituye lo publicado en la nube">Publicar todo</button><button id="authbtn" type="button">Entrar</button></div>
+<div id="zoombox"><button id="zin" type="button" aria-label="Acercar">+</button><button id="zout" type="button" aria-label="Alejar">−</button><button id="zfit" type="button" class="small" aria-label="Ver todo">TODO</button></div>
 <div id="info"><b>Enosi</b><span>Toca una placa del caparazón para explorarla.</span></div>
-<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><button id="detailEdit" type="button">Editar</button></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
+<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><div class="detail-actions"><button id="detailEdit" type="button">Editar</button><button id="detailX" type="button" aria-label="Cerrar">×</button></div></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
 <div id="addbox" hidden><div class="add-form"><h2>Nueva placa</h2><label>Nombre</label><input type="text" id="addName" maxlength="60" placeholder="Nombre del nodo"><label>Color</label><div class="add-colors" id="addColors"></div><label>O personalizado</label><input type="color" id="addCustom" value="#5f8fd0"><div class="detail-row"><button id="addCreate" type="button">Crear</button><button id="addCancel" type="button">Cancelar</button></div></div></div>
 <div id="confirmbox" hidden><div class="confirm-box"><h2 id="confirmTitle">Eliminar</h2><p id="confirmMsg"></p><div class="detail-row" style="justify-content:center"><button id="confirmOk" type="button">Eliminar</button><button id="confirmNo" type="button">Cancelar</button></div></div></div>
 <script>
@@ -628,7 +640,7 @@ function drawBook(t){let u,ox,oy;
  ctx.shadowColor='#9dc0ff';ctx.shadowBlur=7;ctx.fillStyle='#eaf2ff';
  BK.forEach((v,i)=>{const p=q(i);ctx.globalAlpha=.55+.4*Math.sin(t*1.15+i*1.9+1);ctx.beginPath();ctx.arc(p[0],p[1],1.7,0,6.283);ctx.fill()});
  ctx.shadowBlur=0;ctx.globalAlpha=1}
-let last=0;const cam={z:1,tz:1,fx:0,fy:0},ZOOM=1.6;
+let last=0;const cam={z:1,tz:1,fx:0,fy:0},ZOOM=1.6;let freeCam=false;
 let trans=null;
 function wrapName(name,max){
  if(ctx.measureText(name).width<=max)return[name];
@@ -642,10 +654,12 @@ function wrapName(name,max){
  return out}
 function goView(key,isBack){if(trans)return;if(!isBack)vstack.push(view);if(isBack){cam.fx=cx;cam.fy=cy}trans={ph:'out',f:0,to:key,back:!!isBack}}
 let vstack=[];
-function setView(k){view=k;NODES=VIEWS[k].nodes.concat(loadCustom(k));if(k==='root')vstack=[];hover=-1;pin=-1;picking=false;deleting=false;addH=-1;const abx=document.getElementById('addbox');if(abx)abx.hidden=true;buildGeo(VIEWS[k].rings||1);loadImgs();links=mkLinks();size();say(-1);if(VIEWS[k].layout==='vacio'&&NODES[0]&&NODES[0].detail)openDetail(0)}
+function setView(k){view=k;freeCam=false;NODES=VIEWS[k].nodes.concat(loadCustom(k));if(k==='root')vstack=[];hover=-1;pin=-1;picking=false;deleting=false;addH=-1;const abx=document.getElementById('addbox');if(abx)abx.hidden=true;buildGeo(VIEWS[k].rings||1);loadImgs();links=mkLinks();size();say(-1);if(VIEWS[k].layout==='vacio'&&NODES[0]&&NODES[0].detail)openDetail(0)}
 function frame(ms){perf=ms;const t=reduce?0:ms/1000;
  const dt=Math.min(.05,(ms-last)/1000);last=ms;const k=reduce?1:1-Math.exp(-dt*7),tg=(hover>=0&&hover<NODES.length)?hover:(pin>=0&&pin<NODES.length?pin:-1);
- if(tg>=0){const c=P(...nodePos(NODES[tg]));if(cam.z<1.02){cam.fx=c[0];cam.fy=c[1]}else{cam.fx+=(c[0]-cam.fx)*k;cam.fy+=(c[1]-cam.fy)*k}cam.tz=ZOOM*(VIEWS[view].zk||1)}else cam.tz=1;
+ if(!freeCam){
+  if(tg>=0){const c=P(...nodePos(NODES[tg]));if(cam.z<1.02){cam.fx=c[0];cam.fy=c[1]}else{cam.fx+=(c[0]-cam.fx)*k;cam.fy+=(c[1]-cam.fy)*k}cam.tz=ZOOM*(VIEWS[view].zk||1)}else cam.tz=1;
+ }
  if(trans){const sp=reduce?1:dt/.55;
   if(trans.ph==='out'){trans.f=Math.min(1,trans.f+sp);cam.tz=trans.back?.55:6;
    if(trans.f>=1){setView(trans.to);hover=-1;pin=-1;trans.ph='in';cam.z=trans.back?1.8:.55;cam.tz=1;cam.fx=cx;cam.fy=cy}}
@@ -704,8 +718,54 @@ function say(i){shown=i;measInfo();const hint=isOrion()?'Toca una estrella para 
  if(i<0){info.innerHTML=bb+ab+db+'<b>'+VIEWS[view].title+'</b><span>'+ph+'</span>';return}const n=NODES[i],blocked=picking&&deleting&&!n.uid;
  const im=safeImg(n.img);
  info.innerHTML=bb+ab+db+'<b style="color:'+safeColor(n.color)+'">'+escHtml(String(n.name))+'</b><span>'+escHtml(String(n.text||''))+'</span>'+(blocked?'<span class="go">Placa original del caparazón: no se puede eliminar.</span>':n.go?'<span class="go">Clic para entrar</span>':n.detail?'<span class="go">Clic para abrir ficha</span>':'')+'<div class="art">'+(im?'<img alt="'+attr(n.name)+'" src="'+im+'">':'<span>'+(EDITOR?'Ilustración<br>clic para añadir':'Sin ilustración')+'</span>')+'</div>'}
-cv.addEventListener('pointermove',e=>{if(trans)return;const i=pick(e);if(i!==hover){hover=i;cv.style.cursor=i>=0?'pointer':'default';say(i>=0?i:pin)}});
-cv.addEventListener('pointerdown',e=>{if(trans||!detail.hidden)return;if(!document.getElementById('confirmbox').hidden)return;if(picking){const h=cellPick(e);if(h>=0){const idx=NODES.findIndex(n=>n.h===h);if(idx<0){if(!deleting)openAdd(h)}else{const t=NODES[idx];if(deleting){if(t.uid)askConfirm('¿Eliminar "'+t.name+'"? Esta acción no se puede deshacer.',()=>{saveCustom(view,loadCustom(view).filter(x=>x.uid!==t.uid));setView(view)});else say(idx)}}}return}const i=pick(e);if(i<0){pin=-1;say(hover);return}hover=i;pin=i;say(i);const n=NODES[i];if(n.detail){openDetail(i);return}if(n.go)goView(n.go);else if(n.url)window.open(n.url,'_blank','noopener')});
+function zoomBy(r){const z0=cam.z,z1=Math.max(1,Math.min(4,z0*r));if(Math.abs(z1-z0)<.001)return;const mx=W/2,my=H/2;const px=(mx-cam.fx*(1-z0))/z0,py=(my-cam.fy*(1-z0))/z0;cam.z=z1;cam.tz=z1;if(z1>1.001){cam.fx=(mx-px*z1)/(1-z1);cam.fy=(my-py*z1)/(1-z1)}freeCam=true}
+function zoomFit(){cam.z=1;cam.tz=1;cam.fx=cx;cam.fy=cy;freeCam=true}
+function activateAt(e){
+ if(trans||!detail.hidden)return;
+ if(!document.getElementById('confirmbox').hidden)return;
+ if(picking){const h=cellPick(e);if(h>=0){const idx=NODES.findIndex(n=>n.h===h);if(idx<0){if(!deleting)openAdd(h)}else{const t=NODES[idx];if(deleting){if(t.uid)askConfirm('¿Eliminar "'+t.name+'"? Esta acción no se puede deshacer.',()=>{saveCustom(view,loadCustom(view).filter(x=>x.uid!==t.uid));setView(view)});else say(idx)}}}return}
+ const i=pick(e);
+ if(i<0){pin=-1;say(hover);return}
+ hover=i;pin=i;say(i);if(cam.z<=1.05)freeCam=false;const n=NODES[i];
+ if(n.detail){openDetail(i);return}
+ if(n.go)goView(n.go);
+ else if(n.url)window.open(n.url,'_blank','noopener');
+}
+const ptrs=new Set();let tap=null,multi=false;
+cv.addEventListener('pointermove',e=>{
+ if(e.pointerType==='touch'){
+  if(!tap||multi)return;
+  const dx=e.clientX-tap.x,dy=e.clientY-tap.y;
+  if(!tap.moved&&Math.hypot(dx,dy)<10)return;
+  tap.moved=true;
+  if(cam.z>1.02){const z=cam.z;cam.fx+=dx/(1-z);cam.fy+=dy/(1-z);freeCam=true}
+  tap.x=e.clientX;tap.y=e.clientY;
+  return;
+ }
+ if(trans)return;const i=pick(e);
+ if(i!==hover){hover=i;cv.style.cursor=i>=0?'pointer':'default';say(i>=0?i:pin)}
+});
+cv.addEventListener('pointerdown',e=>{
+ if(e.pointerType!=='touch'){activateAt(e);return}
+ if(trans||!detail.hidden)return;
+ if(!document.getElementById('confirmbox').hidden)return;
+ ptrs.add(e.pointerId);
+ if(ptrs.size===1){tap={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:performance.now(),moved:false};multi=false;try{cv.setPointerCapture(e.pointerId)}catch(x){}}
+ else multi=true;
+});
+function endTouch(e,up){
+ if(e.pointerType!=='touch')return;
+ const had=ptrs.delete(e.pointerId);
+ if(ptrs.size>0)return;
+ const t=tap;tap=null;
+ if(had&&up&&t&&!t.moved&&!multi&&performance.now()-t.t<700)activateAt({clientX:t.x0,clientY:t.y0});
+ multi=false;
+}
+cv.addEventListener('pointerup',e=>endTouch(e,true));
+cv.addEventListener('pointercancel',e=>endTouch(e,false));
+document.getElementById('zin').addEventListener('click',()=>zoomBy(1.35));
+document.getElementById('zout').addEventListener('click',()=>zoomBy(1/1.35));
+document.getElementById('zfit').addEventListener('click',zoomFit);
 function goBack(){if(deleting){deleting=false;say(hover);return}if(picking){picking=false;addH=-1;say(hover);return}if(!detail.hidden){requestClose();return}if(view==='root'&&!vstack.length)return;const prev=vstack.pop()||'root';goView(prev,true)}
 info.addEventListener('click',e=>{if(e.target.closest('.backbtn')){goBack();return}if(e.target.closest('.addbtn')){togglePick();return}if(e.target.closest('.delbtn')){toggleDel();return}if(shown>=0&&e.target.closest('.art')&&EDITOR)fi.click()});
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;const cb=document.getElementById('confirmbox');if(cb&&!cb.hidden){closeConfirm(false);return}goBack()});
@@ -788,6 +848,7 @@ function openDetail(i){detailNode=i;const n=NODES[i];detailTitle.textContent=n.n
  paintDetailArt();detail.hidden=false}
 function closeDetail(){const wasVacio=!detail.hidden&&VIEWS[view].layout==='vacio';detail.hidden=true;detailNode=-1;editSnap=null;if(wasVacio)goBack()}
 document.getElementById('detailClose').addEventListener('click',requestClose);
+document.getElementById('detailX').addEventListener('click',requestClose);
 detail.addEventListener('click',e=>{if(e.target===detail)requestClose()});
 detailEdit.addEventListener('click',()=>setEditing(true));
 detailSave.addEventListener('click',()=>{if(detailNode<0)return;let okT=true;try{localStorage.setItem(dtk(),detailText.value)}catch(e){okT=false}const okF=saveFields();if(!okT||!okF){alert('No se pudo guardar todo: almacenamiento lleno o bloqueado por el navegador. Usa Exportar para respaldar.');return}autoBackup();readDetail();readFields();setEditing(false);paintMeter();const st=document.getElementById('detailSaved');if(st){st.hidden=false;clearTimeout(st._t);st._t=setTimeout(()=>{st.hidden=true},2000)}});
