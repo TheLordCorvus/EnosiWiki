@@ -114,16 +114,48 @@ body.editor #pubb{display:inline-block}
  #info{max-height:44vh;overflow-y:auto}
  .field input,.detail-img-title input,.add-form input[type=text]{font-size:16px}
 }
+#searchbtn{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:4;width:38px;height:38px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(11,18,48,.82);color:var(--fg);border:1px solid var(--edge);cursor:pointer;backdrop-filter:blur(6px)}
+#searchbtn:hover{background:rgba(95,143,208,.22)}
+#detailSearch{padding:8px 10px!important;font-size:17px;line-height:1;min-width:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
+#searchbox{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(5,8,23,.78);backdrop-filter:blur(6px)}
+#searchbox[hidden]{display:none}
+.search-box{width:min(600px,94vw);max-height:min(82vh,720px);display:flex;flex-direction:column;background:rgba(11,18,48,.97);border:1px solid var(--edge);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);overflow:hidden}
+.search-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid rgba(95,143,208,.35)}
+.search-head>svg{flex:0 0 auto;opacity:.7}
+#searchInput{flex:1 1 auto;min-width:0;background:transparent;border:0;outline:0;color:var(--fg);font:500 17px "Cormorant Garamond",Georgia,serif;padding:6px 2px;-webkit-appearance:none;appearance:none}
+#searchInput::placeholder{color:#8ea3c9}
+#searchClose{flex:0 0 auto;width:38px;height:38px;padding:0;border-radius:50%;background:transparent;color:var(--fg);border:1px solid transparent;font:400 20px/1 Georgia,serif;cursor:pointer}
+#searchClose:hover{background:rgba(95,143,208,.18);border-color:var(--edge)}
+.search-count{padding:8px 14px 6px;font:700 10px Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase;color:#9fb4d8}
+.search-list{overflow-y:auto;overscroll-behavior:contain;padding:0 8px 10px}
+.search-row{display:block;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid rgba(95,143,208,.16);color:var(--fg);padding:10px 8px;cursor:pointer;font:inherit}
+.search-row:hover,.search-row.sel{background:rgba(95,143,208,.14)}
+.search-crumb{display:block;font:700 10px Cinzel,Georgia,serif;letter-spacing:.06em;text-transform:uppercase;color:#9fb4d8;margin-bottom:3px}
+.search-name{display:block;font:700 15px Cinzel,Georgia,serif;letter-spacing:.04em;margin-bottom:4px}
+.search-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.search-tag{font:700 9px Cinzel,Georgia,serif;letter-spacing:.06em;text-transform:uppercase;color:#a9c3e8;border:1px solid rgba(95,143,208,.45);border-radius:999px;padding:2px 7px}
+.search-snip{display:block;font:500 15px/1.35 "Cormorant Garamond",Georgia,serif;color:#d8e2f5;overflow-wrap:anywhere}
+.search-snip+.search-snip{margin-top:4px;opacity:.85}
+mark.srchit{background:rgba(95,143,208,.42);color:#fff;border-radius:3px;padding:0 1px}
+.search-empty{padding:18px 8px;text-align:center;font:500 15px/1.4 "Cormorant Garamond",Georgia,serif;color:#9fb4d8}
+@media(max-width:899px){
+ #searchbox{align-items:flex-start;padding:calc(8px + env(safe-area-inset-top,0px)) 8px calc(8px + env(safe-area-inset-bottom,0px))}
+ .search-box{width:100%;max-height:74dvh}
+ #searchInput{font-size:16px}
+ .search-row{min-height:52px;padding:11px 8px}
+}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="authbox"><span class="who" id="authwho"></span><button id="pubb" type="button" title="Sube tu copia local y sustituye lo publicado en la nube">Publicar todo</button><button id="authbtn" type="button">Entrar</button></div>
 <div id="zoombox"><button id="zin" type="button" aria-label="Acercar">+</button><button id="zout" type="button" aria-label="Alejar">−</button><button id="zfit" type="button" class="small" aria-label="Ver todo">TODO</button></div>
+<button id="searchbtn" type="button" aria-label="Buscar en la wiki" title="Buscar (Ctrl/Cmd+K)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg></button>
 <div id="info"><b>Enosi</b><span>Toca una placa del caparazón para explorarla.</span></div>
-<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><div class="detail-actions"><button id="detailEdit" type="button">Editar</button><button id="detailX" type="button" aria-label="Cerrar">×</button></div></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
+<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><div class="detail-actions"><button id="detailSearch" type="button" aria-label="Buscar en la wiki" title="Buscar (Ctrl/Cmd+K)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg></button><button id="detailEdit" type="button">Editar</button><button id="detailX" type="button" aria-label="Cerrar">×</button></div></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
 <div id="addbox" hidden><div class="add-form"><h2>Nueva placa</h2><label>Nombre</label><input type="text" id="addName" maxlength="60" placeholder="Nombre del nodo"><label>Color</label><div class="add-colors" id="addColors"></div><label>O personalizado</label><input type="color" id="addCustom" value="#5f8fd0"><div class="detail-row"><button id="addCreate" type="button">Crear</button><button id="addCancel" type="button">Cancelar</button></div></div></div>
 <div id="confirmbox" hidden><div class="confirm-box"><h2 id="confirmTitle">Eliminar</h2><p id="confirmMsg"></p><div class="detail-row" style="justify-content:center"><button id="confirmOk" type="button">Eliminar</button><button id="confirmNo" type="button">Cancelar</button></div></div></div>
+<div id="searchbox" hidden><div class="search-box" role="dialog" aria-modal="true" aria-label="Buscar en la wiki"><div class="search-head"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg><input id="searchInput" type="search" placeholder="Buscar nombre, lugar o palabra…" autocomplete="off" spellcheck="false" aria-label="Buscar en la wiki"><button id="searchClose" type="button" aria-label="Cerrar">×</button></div><div id="searchCount" class="search-count" aria-live="polite">Busca un nombre, un lugar o una palabra…</div><div id="searchList" class="search-list" role="listbox" aria-label="Resultados"></div></div></div>
 <script>
 // ================= DATOS DE ENOSI (edita solo este bloque) =================
 // Cada vista: {title, nodes:[...]}. Caparazón: h = 0 centro, 1-6 anillo,
@@ -827,7 +859,7 @@ function renderMarkup(src){const out=[];let ul=false,qt=[],tb=[];
  closeUl();flushQ();flushT();return out.join('')}
 function readDetail(){let v=lsGet(dtk());if(v===null){const o=lsGet(oldtk());if(o!==null){v=o;lsSet(dtk(),o);
  (o.match(/\(img:[A-Za-z0-9_-]+\)/g)||[]).forEach(t=>{const id=t.slice(5,-1),ok='enosi-inline-'+view+'-'+detailNode+'-'+id,nk=inlineKey(id);if(lsGet(nk)===null){const d=lsGet(ok);if(d!==null)lsSet(nk,d)}})}}if(v===null)v='';detailBody.innerHTML=renderMarkup(v);detailText.value=v}
-function setEditing(on){if(on&&!EDITOR)return;detailBody.hidden=on;detailText.hidden=!on;detailSave.hidden=!on;detailEdit.hidden=on||!EDITOR;const pv=document.getElementById('detailPreview');if(pv){pv.hidden=!on;if(on)pv.innerHTML=renderMarkup(detailText.value)}const df=document.getElementById('detailFields');if(df)df.hidden=!on;const dv=document.getElementById('detailFieldsView');if(dv)dv.hidden=on;const hl=document.getElementById('f_headline'),hv=document.getElementById('headlineView');if(hl)hl.hidden=!on;if(hv)hv.hidden=on||!hv.textContent;const ib=document.getElementById('detailImgBtn');if(ib)ib.hidden=!on;const ipb=document.getElementById('detailImgPath');if(ipb)ipb.hidden=!on;const iib=document.getElementById('detailImgInline');if(iib)iib.hidden=!on;activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)el.disabled=!on});if(hl)hl.disabled=!on;paintDetailArt();if(on){editSnap=snapState();detailText.focus()}}
+function setEditing(on){if(on&&!EDITOR)return;detailBody.hidden=on;detailText.hidden=!on;detailSave.hidden=!on;detailEdit.hidden=on||!EDITOR;const ds=document.getElementById('detailSearch');if(ds)ds.hidden=on;const pv=document.getElementById('detailPreview');if(pv){pv.hidden=!on;if(on)pv.innerHTML=renderMarkup(detailText.value)}const df=document.getElementById('detailFields');if(df)df.hidden=!on;const dv=document.getElementById('detailFieldsView');if(dv)dv.hidden=on;const hl=document.getElementById('f_headline'),hv=document.getElementById('headlineView');if(hl)hl.hidden=!on;if(hv)hv.hidden=on||!hv.textContent;const ib=document.getElementById('detailImgBtn');if(ib)ib.hidden=!on;const ipb=document.getElementById('detailImgPath');if(ipb)ipb.hidden=!on;const iib=document.getElementById('detailImgInline');if(iib)iib.hidden=!on;activeFields().forEach(id=>{const el=document.getElementById('f_'+id);if(el)el.disabled=!on});if(hl)hl.disabled=!on;paintDetailArt();if(on){editSnap=snapState();detailText.focus()}}
 let editSnap=null;
 const snapState=()=>detailText.value+'￾'+activeFields().map(fval).join('￾')+'￾'+((document.getElementById('f_headline')||{}).value||'');
 const isDirty=()=>editSnap!==null&&editSnap!==snapState()&&!detailText.hidden;
@@ -849,6 +881,164 @@ function openDetail(i){detailNode=i;const n=NODES[i];detailTitle.textContent=n.n
 function closeDetail(){const wasVacio=!detail.hidden&&VIEWS[view].layout==='vacio';detail.hidden=true;detailNode=-1;editSnap=null;if(wasVacio)goBack()}
 document.getElementById('detailClose').addEventListener('click',requestClose);
 document.getElementById('detailX').addEventListener('click',requestClose);
+// ===== Buscador global =====
+const searchBox=document.getElementById('searchbox'),searchInput=document.getElementById('searchInput'),searchList=document.getElementById('searchList'),searchCount=document.getElementById('searchCount'),searchClose=document.getElementById('searchClose');
+let searchOpen=false,searchRes=[],searchSel=-1,searchTimer=null,searchLastFocus=null;
+const fold=s=>String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function plainSearch(s){
+ return String(s==null?'':s).replace(/!\[[^\]]*\]\([^)]*\)/g,' ').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/`{1,3}/g,' ').replace(/[*_#>|]/g,' ').replace(/^\s*-{3,}\s*$/gm,' ').replace(/\s+/g,' ').trim();
+}
+function foldMap(s){
+ const text=String(s==null?'':s);let out='';const map=[];let i=0;
+ for(const ch of text){const f=ch.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();for(let k=0;k<f.length;k++){out+=f[k];map.push([i,i+ch.length])}i+=ch.length}
+ return {s:out,map};
+}
+function searchFieldsFor(vk,n){return (n&&n.cats)||FIELD_SETS[vk]||FIELD_IDS}
+function buildSearchIndex(){
+ const idx=[];
+ Object.keys(VIEWS).forEach(vk=>{
+  const v=VIEWS[vk]||{},all=(v.nodes||[]).concat(loadCustom(vk));
+  all.forEach((n,i)=>{
+   const name=String((n&&n.name)||''),sl=slug(name);
+   let body=lsGet('enosi-text-'+vk+'-'+sl);
+   if(body===null)body=lsGet('enosi-text-'+vk+'-'+i)||'';
+   const bodyPlain=plainSearch(body);
+   let rawF=lsGet('enosi-fields-'+vk+'-'+sl);
+   if(rawF===null)rawF=lsGet('enosi-fields-'+vk+'-'+i);
+   let o={};try{o=JSON.parse(rawF||'{}')||{}}catch(e){o={}}
+   const fs=[];
+   if(o.headline&&String(o.headline).trim())fs.push({id:'headline',label:'Título superior',value:String(o.headline)});
+   searchFieldsFor(vk,n).forEach(id=>{const val=o[id];if(val!=null&&String(val).trim())fs.push({id,label:FIELD_LABELS[id]||id,value:String(val)})});
+   const desc=(n&&n.go&&n.text&&String(n.text).trim()!=='Contenido por definir.')?String(n.text):'';
+   if(!name.trim()&&!bodyPlain&&!fs.length&&!desc)return;
+   idx.push({vk,vTitle:(v.title||vk),n,i,name,sl,uid:(n&&n.uid)||'',isGo:!!(n&&n.go),go:(n&&n.go)||null,hasDetail:!!(n&&n.detail),nameF:fold(name),bodyF:fold(bodyPlain),body:bodyPlain,fields:fs.map(f=>({id:f.id,label:f.label,value:f.value,fold:fold(f.value)})),desc,descF:fold(desc)});
+  });
+ });
+ return idx;
+}
+function qTerms(q){const f=fold(q).trim();const terms=f?f.split(/\s+/).filter(Boolean):[];return {f,terms,phrase:terms.join(' ')}}
+function hits(f,terms){return terms.length>0&&terms.every(t=>f.indexOf(t)>=0)}
+function occ(f,terms,phrase){if(phrase.indexOf(' ')>0){let n=0,p=0;while((p=f.indexOf(phrase,p))>=0){n++;p+=phrase.length}if(n)return n}const t=terms[0]||'';let n=0,p=0;while(t&&(p=f.indexOf(t,p))>=0){n++;p+=Math.max(1,t.length)}return n||1}
+function nameHit(f,terms,phrase){if(!terms.length)return 0;if(f===phrase)return 1200;if(f.indexOf(phrase)===0)return 1000;if((' '+f+' ').indexOf(' '+phrase+' ')>=0)return 950;if(f.indexOf(phrase)>=0)return 800;if(terms.every(t=>f.indexOf(t)>=0))return 700;return 0}
+function runSearch(q){
+ const {terms,phrase}=qTerms(q);if(!terms.length)return[];
+ const out=[];
+ for(const e of buildSearchIndex()){
+  const src=[];let score=0;
+  const ns=nameHit(e.nameF,terms,phrase);
+  if(ns){src.push({type:'name',label:'Nombre',score:ns});score=Math.max(score,ns)}
+  for(const f of e.fields){if(hits(f.fold,terms)){const c=occ(f.fold,terms,phrase);src.push({type:'field',id:f.id,label:f.label,text:f.value,count:c,score:520});score=Math.max(score,520)}}
+  if(e.bodyF&&hits(e.bodyF,terms)){const c=occ(e.bodyF,terms,phrase),sc=400+Math.min(10,c)*8;src.push({type:'body',label:'Texto',text:e.body,count:c,score:sc});score=Math.max(score,sc)}
+  if(e.descF&&hits(e.descF,terms)){const c=occ(e.descF,terms,phrase);src.push({type:'desc',label:'Descripción',text:e.desc,count:c,score:100});score=Math.max(score,100)}
+  if(!src.length)continue;
+  out.push({e,sources:src.sort((a,b)=>b.score-a.score),score:score+(src.length-1)*12});
+ }
+ out.sort((a,b)=>b.score-a.score||a.e.i-b.e.i);
+ return out;
+}
+function snipHTML(text,terms,phrase){
+ const t=String(text||'');if(!t)return'';
+ const fm=foldMap(t);const pats=phrase.indexOf(' ')>0?[phrase].concat(terms):terms;
+ let first=-1;for(const term of pats){if(!term)continue;const p=fm.s.indexOf(term);if(p>=0&&(first<0||p<first))first=p}
+ if(first<0)return escHtml(t.slice(0,120));
+ const start=fm.map[first]?fm.map[first][0]:0;
+ let a=Math.max(0,start-45),b=Math.min(t.length,start+85);
+ while(a>0&&!/\s/.test(t[a-1])&&start-a<70)a--;
+ while(b<t.length&&!/\s/.test(t[b])&&b-start<140)b++;
+ const seg=t.slice(a,b),sf=foldMap(seg),rs=[];
+ for(const term of pats){if(!term)continue;let p=0;while((p=sf.s.indexOf(term,p))>=0){rs.push([p,p+term.length]);p+=Math.max(1,term.length)}}
+ rs.sort((x,y)=>x[0]-y[0]);
+ const merged=[];for(const r of rs){const l=merged[merged.length-1];if(l&&r[0]<=l[1])l[1]=Math.max(l[1],r[1]);else merged.push(r.slice())}
+ let out='',last=0;
+ for(const [s0,e0] of merged){const s1=sf.map[s0]?sf.map[s0][0]:0,e1=sf.map[e0-1]?sf.map[e0-1][1]:s1;if(s1<last)continue;out+=escHtml(seg.slice(last,s1))+'<mark class="srchit">'+escHtml(seg.slice(s1,e1))+'</mark>';last=e1}
+ out+=escHtml(seg.slice(last));
+ return (a>0?'…':'')+out+(b<t.length?'…':'');
+}
+function rowHTML(r,idx,terms,phrase){
+ const e=r.e;
+ const tags=r.sources.map(s=>{
+  if(s.type==='name')return'<span class="search-tag">Nombre</span>';
+  if(s.type==='body')return'<span class="search-tag">Texto'+(s.count>1?' ×'+s.count:'')+'</span>';
+  if(s.type==='desc')return'<span class="search-tag">Descripción</span>';
+  return'<span class="search-tag">'+escHtml(s.label)+'</span>';
+ }).join('');
+ const snips=[];
+ for(const s of r.sources){if(snips.length>=2)break;if(!s.text||s.type==='name')continue;const h=snipHTML(s.text,terms,phrase);if(h&&snips.indexOf(h)<0)snips.push(h)}
+ return'<button type="button" class="search-row" data-i="'+idx+'" role="option" aria-selected="false"><span class="search-crumb">'+escHtml(e.vTitle)+'</span><span class="search-name">'+escHtml(e.name||e.vTitle)+'</span><span class="search-tags">'+(e.isGo?'<span class="search-tag">Vista</span>':'')+tags+'</span>'+snips.map(s=>'<span class="search-snip">'+s+'</span>').join('')+'</button>';
+}
+function renderSearch(){
+ const raw=searchInput.value,q=qTerms(raw);
+ if(q.f.length<2){searchCount.textContent='Escribe al menos 2 letras.';searchList.innerHTML='';searchRes=[];searchSel=-1;return}
+ const all=runSearch(raw);
+ if(!all.length){searchCount.textContent='Sin coincidencias';searchList.innerHTML='<div class="search-empty">Prueba sin acentos o con otra palabra.</div>';searchRes=[];searchSel=-1;return}
+ const MAX=60,shown=all.slice(0,MAX),views=new Set(all.map(r=>r.e.vk));
+ searchRes=shown;searchSel=-1;
+ searchCount.textContent=(all.length>MAX?'Mostrando '+MAX+' de '+all.length+' coincidencias · afina la búsqueda':all.length+(all.length===1?' coincidencia':' coincidencias'))+' en '+views.size+(views.size===1?' vista':' vistas');
+ searchList.innerHTML=shown.map((r,i)=>rowHTML(r,i,q.terms,q.phrase)).join('');
+ searchList.scrollTop=0;
+}
+function setSel(n){
+ const rows=searchList.querySelectorAll('.search-row');if(!rows.length)return;
+ searchSel=Math.max(0,Math.min(rows.length-1,n));
+ rows.forEach((r,i)=>{r.classList.toggle('sel',i===searchSel);r.setAttribute('aria-selected',i===searchSel?'true':'false')});
+ rows[searchSel].scrollIntoView({block:'nearest'});
+}
+function openSearch(trigger){
+ if(searchOpen)return;
+ if(!detail.hidden&&!detailText.hidden)return;
+ if(!document.getElementById('confirmbox').hidden||!addBox.hidden)return;
+ searchLastFocus=trigger||document.activeElement;
+ searchOpen=true;searchBox.hidden=false;
+ searchInput.value='';searchRes=[];searchSel=-1;searchList.innerHTML='';searchCount.textContent='Busca un nombre, un lugar o una palabra…';
+ setTimeout(()=>{try{searchInput.focus()}catch(e){}},30);
+}
+function closeSearch(restore){
+ if(!searchOpen)return;
+ searchOpen=false;searchBox.hidden=true;
+ if(searchTimer){clearTimeout(searchTimer);searchTimer=null}
+ if(restore!==false){const f=searchLastFocus;searchLastFocus=null;if(f&&document.contains(f)){try{f.focus()}catch(e){}}}
+}
+function jumpTo(r){
+ if(!r||!r.e)return;
+ const e=r.e;closeSearch(false);
+ if(trans)trans=null;
+ if(e.isGo){if(!detail.hidden){detail.hidden=true;detailNode=-1;editSnap=null}goView(e.go);return}
+ if(view!==e.vk){if(!detail.hidden){detail.hidden=true;detailNode=-1;editSnap=null}vstack.push(view);setView(e.vk)}
+ let i=-1;if(e.uid)i=NODES.findIndex(n=>n.uid===e.uid);
+ if(i<0)i=NODES.findIndex(n=>slug(n.name)===e.sl);
+ if(i<0)return;
+ hover=i;pin=i;say(i);freeCam=false;
+ if(NODES[i].detail)openDetail(i);
+ else if(NODES[i].go)goView(NODES[i].go);
+}
+searchInput.addEventListener('input',()=>{if(searchTimer)clearTimeout(searchTimer);searchTimer=setTimeout(renderSearch,110)});
+searchInput.addEventListener('keydown',e=>{
+ if(e.key==='ArrowDown'){e.preventDefault();setSel(searchSel<0?0:searchSel+1);return}
+ if(e.key==='ArrowUp'){e.preventDefault();setSel(searchSel<0?0:searchSel-1);return}
+ if(e.key==='Enter'){const i=searchSel>=0?searchSel:(searchRes.length===1?0:-1);if(i>=0&&searchRes[i]){e.preventDefault();jumpTo(searchRes[i])}}
+});
+searchList.addEventListener('click',e=>{const b=e.target.closest('.search-row');if(b)jumpTo(searchRes[+b.dataset.i])});
+searchBox.addEventListener('click',e=>{if(e.target===searchBox)closeSearch()});
+searchBox.addEventListener('keydown',e=>{
+ if(e.key!=='Tab')return;
+ const f=[...searchBox.querySelectorAll('input,button')].filter(x=>!x.disabled&&x.getClientRects().length);
+ if(!f.length)return;
+ const first=f[0],last=f[f.length-1];
+ if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+ else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+});
+searchClose.addEventListener('click',()=>closeSearch());
+document.getElementById('searchbtn').addEventListener('click',e=>openSearch(e.currentTarget));
+document.getElementById('detailSearch').addEventListener('click',e=>openSearch(e.currentTarget));
+document.addEventListener('keydown',e=>{
+ const k=(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&(e.key==='k'||e.key==='K');
+ if(k){
+  if(searchOpen){e.preventDefault();e.stopImmediatePropagation();searchInput.focus();return}
+  if((!detail.hidden&&!detailText.hidden)||!document.getElementById('confirmbox').hidden||!addBox.hidden)return;
+  e.preventDefault();e.stopImmediatePropagation();openSearch();return;
+ }
+ if(searchOpen&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();closeSearch();return}
+},true);
 detail.addEventListener('click',e=>{if(e.target===detail)requestClose()});
 detailEdit.addEventListener('click',()=>setEditing(true));
 detailSave.addEventListener('click',()=>{if(detailNode<0)return;let okT=true;try{localStorage.setItem(dtk(),detailText.value)}catch(e){okT=false}const okF=saveFields();if(!okT||!okF){alert('No se pudo guardar todo: almacenamiento lleno o bloqueado por el navegador. Usa Exportar para respaldar.');return}autoBackup();readDetail();readFields();setEditing(false);paintMeter();const st=document.getElementById('detailSaved');if(st){st.hidden=false;clearTimeout(st._t);st._t=setTimeout(()=>{st.hidden=true},2000)}});
