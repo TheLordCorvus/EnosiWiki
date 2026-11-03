@@ -1102,7 +1102,10 @@ document.getElementById('inlineFile').addEventListener('change',e=>{const f=e.ta
 const fi=document.createElement('input');fi.type='file';fi.accept='image/*';
 const ik=i=>'enosi-img-'+(view==='root'?'root':view)+'-'+slug(NODES[i]&&NODES[i].name);
 const oldik=i=>(view==='root'?'enosi-img-':'enosi-img-'+view+'-')+i;
-function loadImgs(){NODES.forEach((n,i)=>{if(!n.img){let v=lsGet(ik(i));if(v===null){const o=lsGet(oldik(i));if(o!==null){v=o;lsSet(ik(i),v)}}if(v!==null){const s=safeImg(v);if(s)n.img=s}}})}
+// Recuperación puntual: el enlace de la imagen de Sheng se perdió, pero el archivo sigue en Storage.
+// Se restaura una sola vez por navegador; después se puede cambiar o quitar normalmente.
+const recoveredImgs={'oculatus/sheng':'https://firebasestorage.googleapis.com/v0/b/wiki-enosi.firebasestorage.app/o/wiki%2Foculatus%2Fsheng%2F1793721518984.jpg?alt=media&token=e777cb0a-97cc-493e-a842-b98b7305a23e'};
+function loadImgs(){NODES.forEach((n,i)=>{if(!n.img){let v=lsGet(ik(i));if(v===null){const o=lsGet(oldik(i));if(o!==null){v=o;lsSet(ik(i),v)}}const rk=view+'/'+slug(n.name),r=recoveredImgs[rk],flag='recovery-img-'+view+'-'+slug(n.name);if(r&&lsGet(flag)===null){if(!safeImg(v)){v=r;if(lsSet(ik(i),r))lsSet(flag,'1')}else lsSet(flag,'1')}if(v!==null){const s=safeImg(v);if(s)n.img=s}}})}
 loadImgs();
 fi.addEventListener('change',()=>{const f=fi.files[0];const target=detail.hidden?shown:detailNode;const tn=NODES[target];if(!f||target<0||!tn)return;const k=target,r=new FileReader();
  r.onload=()=>{const im=new Image();im.onload=()=>{const m=Math.min(1,720/im.width),c=document.createElement('canvas');c.width=im.width*m;c.height=im.height*m;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
