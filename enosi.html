@@ -106,6 +106,7 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 #authbox .who{font:700 11px Cinzel,Georgia,serif;letter-spacing:.04em;color:#9fb4d8;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #authbtn{font:700 11px Cinzel,Georgia,serif;letter-spacing:.06em;padding:7px 12px;color:var(--fg);background:rgba(11,18,48,.82);border:1px solid var(--edge);border-radius:999px;cursor:pointer;backdrop-filter:blur(6px)}
 #authbtn:hover{background:rgba(95,143,208,.22)}
+#authbtn:disabled{opacity:.6;cursor:default}
 #cloudNotice{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;max-width:min(540px,92vw);padding:9px 10px 9px 14px;background:rgba(11,18,48,.97);border:1px solid #3ddc6b;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.45);font:700 12px Cinzel,Georgia,serif;letter-spacing:.03em;color:var(--fg)}
 #cloudNotice[hidden]{display:none}
 #cloudNotice span{font:500 15px/1.25 "Cormorant Garamond",Georgia,serif;letter-spacing:0}
@@ -1232,11 +1233,11 @@ requestAnimationFrame(frame);
    if(ajenos)avisoNube();
   },e=>console.warn('No se pudo vigilar la nube:',e));
  }
- function ui(u){const b=document.getElementById('authbtn'),w=document.getElementById('authwho');if(!b)return;b.textContent=u?'Salir':'Entrar';w.textContent=u?(u.displayName||u.email||''):'';w.title=u?(u.email||''):''}
+ function ui(u){const b=document.getElementById('authbtn'),w=document.getElementById('authwho');if(!b)return;b.disabled=false;b.textContent=u?'Salir':'Entrar';w.textContent=u?(u.displayName||u.email||''):'';w.title=u?(u.email||''):''}
  async function revisar(u){
-  editor=false;if(typeof setEditor==='function')setEditor(false);
-  if(!u){ui(null);return}
   ui(u);
+  editor=false;if(typeof setEditor==='function')setEditor(false);
+  if(!u)return;
   try{await cargaP;const s=await db.doc('editors/'+u.uid).get();editor=s.exists}catch(e){editor=false}
   if(typeof setEditor==='function')setEditor(editor);
   if(!editor&&!avisado){avisado=true;alert('Tu cuenta no tiene permisos de edición.\n\nUID: '+u.uid+'\n\nPide que añadan ese UID a la colección "editors" de Firestore.')}
@@ -1244,8 +1245,16 @@ requestAnimationFrame(frame);
   ui(u);
  }
  cargaP.then(()=>iniciarVigilancia(),()=>iniciarVigilancia());
+ const botonAuth=document.getElementById('authbtn');
+ if(botonAuth){botonAuth.disabled=true;botonAuth.textContent='…';setTimeout(()=>{if(botonAuth.disabled){botonAuth.disabled=false;botonAuth.textContent='Entrar'}},8000)}
  auth.onAuthStateChanged(revisar);
- document.getElementById('authbtn').addEventListener('click',()=>{if(auth.currentUser){auth.signOut()}else{const p=new firebase.auth.GoogleAuthProvider();auth.signInWithPopup(p).catch(e=>alert('No se pudo iniciar sesión: '+e.message))}});
+ async function iniciarSesion(){
+  try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}
+  catch(e){console.warn('No se pudo activar la sesión persistente:',e)}
+  try{const p=new firebase.auth.GoogleAuthProvider();await auth.signInWithPopup(p)}
+  catch(e){alert('No se pudo iniciar sesión: '+e.message)}
+ }
+ if(botonAuth)botonAuth.addEventListener('click',()=>{if(auth.currentUser){auth.signOut()}else{iniciarSesion()}});
  document.getElementById('cloudNoticeOk').addEventListener('click',()=>{const el=document.getElementById('cloudNotice');if(el)el.hidden=true});
  window.NUBE={guardar,borrar,syncable,subirImagen,flush,activo:()=>ready&&editor};
 })();
