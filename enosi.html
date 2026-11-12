@@ -104,10 +104,14 @@ body.wide .art{height:auto;aspect-ratio:4/3}
 @media(max-width:899px){#detail{flex-direction:column;overflow-y:auto;overflow-x:hidden}}
 #authbox{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:calc(16px + env(safe-area-inset-right,0px));z-index:4;display:flex;gap:8px;align-items:center;justify-content:flex-end;max-width:70vw}
 #authbox .who{font:700 11px Cinzel,Georgia,serif;letter-spacing:.04em;color:#9fb4d8;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#authbtn,#pubb{font:700 11px Cinzel,Georgia,serif;letter-spacing:.06em;padding:7px 12px;color:var(--fg);background:rgba(11,18,48,.82);border:1px solid var(--edge);border-radius:999px;cursor:pointer;backdrop-filter:blur(6px)}
-#authbtn:hover,#pubb:hover{background:rgba(95,143,208,.22)}
-#pubb{display:none;border-color:#3ddc6b}
-body.editor #pubb{display:inline-block}
+#authbtn{font:700 11px Cinzel,Georgia,serif;letter-spacing:.06em;padding:7px 12px;color:var(--fg);background:rgba(11,18,48,.82);border:1px solid var(--edge);border-radius:999px;cursor:pointer;backdrop-filter:blur(6px)}
+#authbtn:hover{background:rgba(95,143,208,.22)}
+#cloudNotice{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;max-width:min(540px,92vw);padding:9px 10px 9px 14px;background:rgba(11,18,48,.97);border:1px solid #3ddc6b;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.45);font:700 12px Cinzel,Georgia,serif;letter-spacing:.03em;color:var(--fg)}
+#cloudNotice[hidden]{display:none}
+#cloudNotice span{font:500 15px/1.25 "Cormorant Garamond",Georgia,serif;letter-spacing:0}
+#cloudNoticeOk{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid #3ddc6b;background:rgba(61,220,107,.14);color:var(--fg);font:700 11px Cinzel,Georgia,serif;cursor:pointer}
+#cloudNoticeOk:hover{background:rgba(61,220,107,.28)}
+@media(max-width:600px){#cloudNotice{top:calc(56px + env(safe-area-inset-top,0px));width:calc(100vw - 20px);border-radius:14px;justify-content:space-between}}
 #zoombox{display:none}
 @media(max-width:899px){
  #zoombox{display:flex;position:fixed;left:10px;top:38%;transform:translateY(-50%);z-index:4;flex-direction:column;gap:8px}
@@ -151,11 +155,12 @@ mark.srchit{background:rgba(95,143,208,.42);color:#fff;border-radius:3px;padding
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="authbox"><span class="who" id="authwho"></span><button id="pubb" type="button" title="Publica tu copia local; antes se compara con la nube y se descarga una copia de seguridad">Publicar todo</button><button id="authbtn" type="button">Entrar</button></div>
+<div id="authbox"><span class="who" id="authwho"></span><button id="authbtn" type="button">Entrar</button></div>
+<div id="cloudNotice" hidden role="status" aria-live="polite"><span>Hay nuevos cambios publicados. Cuando termines, reinicia la página para verlos.</span><button id="cloudNoticeOk" type="button">OK</button></div>
 <div id="zoombox"><button id="zin" type="button" aria-label="Acercar">+</button><button id="zout" type="button" aria-label="Alejar">−</button><button id="zfit" type="button" class="small" aria-label="Ver todo">TODO</button></div>
 <button id="searchbtn" type="button" aria-label="Buscar en la wiki" title="Buscar (Ctrl/Cmd+K)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg></button>
 <div id="info"><b>Enosi</b><span>Toca una placa del caparazón para explorarla.</span></div>
-<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><div class="detail-actions"><button id="detailSearch" type="button" aria-label="Buscar en la wiki" title="Buscar (Ctrl/Cmd+K)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg></button><button id="detailEdit" type="button">Editar</button><button id="detailX" type="button" aria-label="Cerrar">×</button></div></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="detail-quote" id="quoteField" hidden><label for="f_citado">Citado</label><input id="f_citado" type="text" placeholder="Frase al pasar el cursor" autocomplete="off"></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden>Guardar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
+<div id="detail" hidden><div class="detail-box" id="detailBox"><div class="detail-head"><h2 id="detailTitle">Radomir</h2><div class="detail-actions"><button id="detailSearch" type="button" aria-label="Buscar en la wiki" title="Buscar (Ctrl/Cmd+K)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg></button><button id="detailEdit" type="button">Editar</button><button id="detailX" type="button" aria-label="Cerrar">×</button></div></div><div class="detail-cols"><div class="detail-main"><div class="detail-body" id="detailBody"></div><textarea id="detailText" placeholder="# Título&#10;**negrita** *cursiva* [enlace](https://…)&#10;> cita  | a | b |&#10;![t](img:ID|izq|50%)" hidden></textarea><div class="detail-preview" id="detailPreview" hidden></div></div><div class="detail-side"><div class="detail-img-title"><h3 id="headlineView"></h3><input id="f_headline" placeholder="Título superior" hidden></div><div class="detail-quote" id="quoteField" hidden><label for="f_citado">Citado</label><input id="f_citado" type="text" placeholder="Frase al pasar el cursor" autocomplete="off"></div><div class="art" id="detailArt"><span>Imagen<br>clic para añadir</span></div><button id="detailImgBtn" type="button">Añadir imagen</button><button id="detailImgPath" type="button" hidden>Usar ruta</button><button id="detailImgDel" type="button" hidden>Quitar imagen</button><div class="detail-fields" id="detailFields" hidden></div><div class="detail-fields-view" id="detailFieldsView"></div></div></div><div class="detail-row"><span id="detailSaved" hidden>Guardado ✓</span><span id="storeMeter"></span><button id="detailExport" type="button">Exportar</button><button id="detailImport" type="button">Importar</button><button id="detailImgInline" type="button" hidden>Imagen en texto</button><button id="detailSave" type="button" hidden title="Guarda en este navegador y publica solo los cambios de esta ficha">Guardar y publicar</button><button id="detailClose" type="button">Cerrar</button></div><input type="file" id="backupFile" accept="application/json" hidden><input type="file" id="inlineFile" accept="image/*" hidden></div></div>
 <div id="addbox" hidden><div class="add-form"><h2>Nueva placa</h2><label>Nombre</label><input type="text" id="addName" maxlength="60" placeholder="Nombre del nodo"><label>Color</label><div class="add-colors" id="addColors"></div><label>O personalizado</label><input type="color" id="addCustom" value="#5f8fd0"><div class="detail-row"><button id="addCreate" type="button">Crear</button><button id="addCancel" type="button">Cancelar</button></div></div></div>
 <div id="confirmbox" hidden><div class="confirm-box"><h2 id="confirmTitle">Eliminar</h2><p id="confirmMsg"></p><div class="detail-row" style="justify-content:center"><button id="confirmOk" type="button">Eliminar</button><button id="confirmNo" type="button">Cancelar</button></div></div></div>
 <div id="searchbox" hidden><div class="search-box" role="dialog" aria-modal="true" aria-label="Buscar en la wiki"><div class="search-head"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg><input id="searchInput" type="search" placeholder="Buscar nombre, lugar o palabra…" autocomplete="off" spellcheck="false" aria-label="Buscar en la wiki"><button id="searchClose" type="button" aria-label="Cerrar">×</button></div><div id="searchCount" class="search-count" aria-live="polite">Busca un nombre, un lugar o una palabra…</div><div id="searchList" class="search-list" role="listbox" aria-label="Resultados"></div></div></div>
@@ -807,7 +812,7 @@ info.addEventListener('click',e=>{if(e.target.closest('.backbtn')){goBack();retu
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;const cb=document.getElementById('confirmbox');if(cb&&!cb.hidden){closeConfirm(false);return}goBack()});
 // ficha detalle Radomir: texto central + imagen a la derecha
 const detail=document.getElementById('detail'),detailTitle=document.getElementById('detailTitle'),detailBody=document.getElementById('detailBody'),detailText=document.getElementById('detailText'),detailArt=document.getElementById('detailArt'),detailEdit=document.getElementById('detailEdit'),detailSave=document.getElementById('detailSave');
-let detailNode=-1;
+let detailNode=-1,saveStatusSeq=0;
 const slug=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'nodo';
 const dName=()=>slug(NODES[detailNode]&&NODES[detailNode].name);
 const dtk=()=>'enosi-text-'+view+'-'+dName();const dfk=()=>'enosi-fields-'+view+'-'+dName();const dqk=()=>'enosi-citado-'+view+'-'+dName();
@@ -1062,7 +1067,7 @@ document.addEventListener('keydown',e=>{
 },true);
 detail.addEventListener('click',e=>{if(e.target===detail)requestClose()});
 detailEdit.addEventListener('click',()=>setEditing(true));
-detailSave.addEventListener('click',()=>{if(detailNode<0)return;let okT=true;try{localStorage.setItem(dtk(),detailText.value)}catch(e){okT=false}const okF=saveFields();if(!okT||!okF){alert('No se pudo guardar todo: almacenamiento lleno o bloqueado por el navegador. Usa Exportar para respaldar.');return}autoBackup();readDetail();readFields();setEditing(false);if(shown>=0)say(shown);paintMeter();const st=document.getElementById('detailSaved');if(st){st.hidden=false;clearTimeout(st._t);st._t=setTimeout(()=>{st.hidden=true},2000)}});
+detailSave.addEventListener('click',async()=>{if(detailNode<0)return;let okT=true;try{localStorage.setItem(dtk(),detailText.value)}catch(e){okT=false}const okF=saveFields();if(!okT||!okF){alert('No se pudo guardar todo: almacenamiento lleno o bloqueado por el navegador. Usa Exportar para respaldar.');return}autoBackup();readDetail();readFields();setEditing(false);if(shown>=0)say(shown);paintMeter();const st=document.getElementById('detailSaved');if(!st)return;const seq=++saveStatusSeq,nube=window.NUBE&&NUBE.activo&&NUBE.activo();st.hidden=false;clearTimeout(st._t);st.style.color='';st.textContent=nube?'Publicando…':'Guardado ✓';if(nube){let ok=false;try{ok=await NUBE.flush()}catch(e){console.warn('No se pudo publicar el guardado:',e)}if(seq!==saveStatusSeq)return;st.textContent=ok?'Publicado ✓':'Guardado solo en este navegador';st.style.color=ok?'':'#ffb86b';clearTimeout(st._t);st._t=setTimeout(()=>{st.hidden=true;st.style.color=''},ok?2200:5000)}else{st._t=setTimeout(()=>{st.hidden=true;st.style.color=''},2000)}});
 document.getElementById('detailExport').addEventListener('click',()=>{const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('enosi-')===0)o[k]=localStorage.getItem(k)}}catch(e){}
  const b=new Blob([JSON.stringify(o)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='enosi-respaldo.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)});
 document.getElementById('detailImport').addEventListener('click',()=>document.getElementById('backupFile').click());
@@ -1136,7 +1141,7 @@ requestAnimationFrame(frame);
 (function(){
  const cfg={apiKey:"AIzaSyDshPrS2UiXBfW6z_ydMTnMTNCkymLwn6k",authDomain:"wiki-enosi.firebaseapp.com",projectId:"wiki-enosi",storageBucket:"wiki-enosi.firebasestorage.app",messagingSenderId:"956108241014",appId:"1:956108241014:web:3d59ee502af9d909698757"};
  if(typeof firebase==='undefined'){console.warn('Firebase no cargó: la wiki sigue en modo local.');return}
- let app,db,auth,storage,editor=false,aplicando=false,ready=false,docExiste=false,cargaOk=false,avisado=false,pidiendo=false;
+ let app,db,auth,storage,editor=false,aplicando=false,ready=false,avisado=false;
  try{
   app=firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth();storage=firebase.storage();ready=true;
  }catch(e){console.warn('Firebase no disponible:',e);return}
@@ -1144,95 +1149,71 @@ requestAnimationFrame(frame);
  const FV=firebase.firestore.FieldValue;
  const keyOk=k=>typeof k==='string'&&k.indexOf('enosi-')===0&&k.indexOf('enosi-autobk-')!==0;
  function syncable(k,v){if(!ready||!editor||aplicando)return false;if(!keyOk(k))return false;if(v!=null&&String(v).indexOf('data:image/')===0)return false;return true}
- const pend={};let tmr=null;
+ const pend={},enviados={};let tmr=null,flushP=null,reintento=null,nube={},nubeLista=false,vigilancia=null;
  function guardar(k,v){if(!syncable(k,v))return;pend[k]=String(v);clearTimeout(tmr);tmr=setTimeout(flush,700)}
- function borrar(k){if(!syncable(k,''))return;delete pend[k];docRef().set({datos:{[k]:FV.delete()}},{merge:true}).catch(e=>console.warn('No se pudo borrar en la nube:',e))}
- async function flush(){const p=pend;for(const k in p)delete pend[k];if(!Object.keys(p).length)return;try{await docRef().set({datos:p,actualizado:FV.serverTimestamp()},{merge:true})}catch(e){console.warn('No se pudo guardar en la nube:',e)}}
+ async function flush(){
+  if(flushP)return flushP;
+  flushP=(async()=>{
+   let ok=true;
+   while(true){
+    if(!editor)return false;
+    const p=Object.assign({},pend),ks=Object.keys(p);if(!ks.length)break;
+    for(const k of ks)delete pend[k];
+    try{
+     await docRef().set({datos:p,actualizado:FV.serverTimestamp()},{merge:true});
+     ks.forEach(k=>enviados[k]=p[k]);
+    }catch(e){
+     console.warn('No se pudo guardar en la nube:',e);
+     ks.forEach(k=>{if(!(k in pend))pend[k]=p[k]});
+     ok=false;clearTimeout(reintento);
+     reintento=setTimeout(()=>{reintento=null;flush()},5000);
+     break;
+    }
+   }
+   return ok;
+  })();
+  try{return await flushP}finally{flushP=null}
+ }
+ async function borrar(k){
+  if(!syncable(k,''))return;
+  delete pend[k];
+  try{
+   if(flushP)await flushP;
+   delete pend[k];
+   await docRef().set({datos:{[k]:FV.delete()},actualizado:FV.serverTimestamp()},{merge:true});
+   enviados[k]=null;
+  }catch(e){console.warn('No se pudo borrar en la nube:',e)}
+ }
  async function subirImagen(dataUrl,path){if(!editor||!auth.currentUser)return null;try{const blob=await (await fetch(dataUrl)).blob();const r=storage.ref('wiki/'+path);await r.put(blob,{contentType:blob.type||'image/jpeg'});return await r.getDownloadURL()}catch(e){console.warn('No se pudo subir la imagen:',e);return null}}
  function refrescar(){try{const abierto=!detail.hidden,dn=detailNode,editando=!detailText.hidden;if(editando&&isDirty&&isDirty())return;setView(view);if(abierto&&dn>=0&&NODES[dn])openDetail(dn)}catch(e){}}
+ function datosDe(s){const o=s&&s.data&&s.data(),d=o&&o.datos,r={};if(d&&typeof d==='object'&&!Array.isArray(d))Object.keys(d).forEach(k=>{if(keyOk(k)&&typeof d[k]==='string')r[k]=d[k]});return r}
  async function cargar(){
-  try{const s=await docRef().get();docExiste=s.exists;cargaOk=true;if(!docExiste)return;
-   const d=s.data().datos||{};aplicando=true;
-   Object.keys(d).forEach(k=>{if(!keyOk(k)||typeof d[k]!=='string')return;try{localStorage.setItem(k,d[k])}catch(e){}});
-   aplicando=false;refrescar();
+  try{
+   const s=await docRef().get(),d=datosDe(s);aplicando=true;
+   Object.keys(d).forEach(k=>{try{localStorage.setItem(k,d[k])}catch(e){}});
+   aplicando=false;nube=d;nubeLista=true;refrescar();
   }catch(e){console.warn('No se pudo leer la nube:',e)}
  }
  let cargaP=cargar();
- function selloRespaldo(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'-'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds())}
- function descargarRespaldoNube(prev){
-  const nombre='enosi-nube-antes-de-publicar-'+selloRespaldo()+'.json';
-  try{
-   const b=new Blob([JSON.stringify(prev,null,2)],{type:'application/json'}),a=document.createElement('a');
-   a.href=URL.createObjectURL(b);a.download=nombre;document.body.appendChild(a);a.click();a.remove();
-   setTimeout(()=>URL.revokeObjectURL(a.href),4000);return nombre;
-  }catch(e){console.warn('No se pudo descargar la copia de la nube:',e);return ''}
- }
- function guardarRespaldoLocal(prev){
-  try{localStorage.setItem('enosi-autobk-'+Date.now(),JSON.stringify(prev));return true}catch(e){console.warn('No se pudo guardar la copia local de la nube:',e);return false}
- }
- function listaClaves(ks,max){
-  const n=ks.slice(0,max||10).map(k=>'• '+k).join('\n');
-  return ks.length>(max||10)?n+'\n• … y '+(ks.length-(max||10))+' más':n;
- }
- function cuentaDatos(n){return n+' dato'+(n===1?'':'s')}
- function mismosDatos(a,b){
-  const ak=Object.keys(a).filter(keyOk),bk=Object.keys(b).filter(keyOk);
-  if(ak.length!==bk.length)return false;
-  return ak.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&a[k]===b[k]);
- }
- async function ejecutarPublicacion(keys,prev){
-  const prevKeys=Object.keys(prev).filter(keyOk);
-  let copia='';
-  if(prevKeys.length){
-   const archivo=descargarRespaldoNube(prev),local=guardarRespaldoLocal(prev);
-   if(!archivo&&!local)return alert('No se pudo guardar una copia de la nube anterior. Publicación cancelada para evitar perder datos.');
-   copia=archivo&&local?'\n\nCopia de la nube anterior: '+archivo+' (también guardada en este navegador).':archivo?'\n\nCopia de la nube anterior: '+archivo+'.':'\n\nCopia de la nube anterior guardada en este navegador.';
-  }
-  const datos={};let n=0,imgs=0;
-  for(const k of keys){let v=localStorage.getItem(k);if(v==null)return alert('Un dato desapareció mientras preparabas la publicación. No se ha modificado la nube.'+copia);
-   if(v.indexOf('data:image/')===0){const u=await subirImagen(v,'migracion/'+Date.now()+'-'+(++imgs)+'.jpg');if(!u)return alert('No se pudo subir una imagen. Publicación cancelada: la nube NO se ha modificado.'+copia);v=u;try{localStorage.setItem(k,u)}catch(e){}}
-   datos[k]=v;n++;
-  }
-  const size=JSON.stringify(datos).length;
-  if(size>900000)return alert('Demasiado contenido para un solo documento ('+Math.round(size/1024)+' KB). La nube NO se ha modificado.'+copia);
-  try{
-   await db.runTransaction(async tx=>{
-    const s=await tx.get(docRef()),actual=(s.data()&&s.data().datos)||{};
-    if(!mismosDatos(prev,actual)){const err=new Error('ENOSI_NUBE_CAMBIADA');err.code='enosi-nube-cambiada';throw err}
-    tx.set(docRef(),{datos,actualizado:FV.serverTimestamp()});
+ function avisoNube(){const el=document.getElementById('cloudNotice');if(el)el.hidden=false}
+ function iniciarVigilancia(){
+  if(vigilancia)return;
+  vigilancia=docRef().onSnapshot(s=>{
+   if(s.metadata&&s.metadata.fromCache)return;
+   const d=datosDe(s);
+   if(!nubeLista){nube=d;nubeLista=true;return}
+   const cambios=[];
+   Object.keys(d).forEach(k=>{if(nube[k]!==d[k])cambios.push(k)});
+   Object.keys(nube).forEach(k=>{if(!(k in d))cambios.push(k)});
+   nube=d;
+   if(!cambios.length)return;
+   const ajenos=cambios.some(k=>{
+    let v=null;try{v=localStorage.getItem(k)}catch(e){}
+    if(!(k in d))return v!==null&&enviados[k]!==null;
+    return d[k]!==v&&d[k]!==enviados[k];
    });
-   docExiste=true;alert('Publicado: '+cuentaDatos(n)+' ('+Math.round(size/1024)+' KB).'+(copia||'\n\nNo había datos previos en la nube.'));
-  }catch(e){
-   if((e&&e.code==='enosi-nube-cambiada')||String(e&&e.message||'').indexOf('ENOSI_NUBE_CAMBIADA')>=0)return alert('La nube cambió mientras preparabas la publicación. No se ha modificado nada; vuelve a intentarlo.'+copia);
-   alert('No se pudo publicar: '+e.message+'\n\nLa nube no se ha sustituido.'+copia)
-  }
- }
- async function publicar(){
-  if(!editor)return alert('Inicia sesión como editor para publicar.');
-  await cargaP;
-  await flush();
-  const keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keyOk(k))keys.push(k)}}catch(e){}
-  if(!keys.length)return alert('No hay datos que publicar.');
-  let prev={};
-  try{const s=await docRef().get({source:'server'}),d=s.data()&&s.data().datos;if(d&&typeof d==='object'&&!Array.isArray(d))prev=d}catch(e){return alert('No se pudo comprobar el contenido actual de la nube. Publicación cancelada para evitar perder datos.')}
-  const prevKeys=Object.keys(prev).filter(keyOk);
-  const faltan=prevKeys.filter(k=>keys.indexOf(k)<0);
-  const nuevos=keys.filter(k=>prevKeys.indexOf(k)<0);
-  const distintos=keys.filter(k=>prevKeys.indexOf(k)>=0&&prev[k]!==localStorage.getItem(k));
-  let msg='Nube: '+cuentaDatos(prevKeys.length)+'.\nEste navegador: '+cuentaDatos(keys.length)+' ('+nuevos.length+' nuevo'+(nuevos.length===1?'':'s')+').\n\n';
-  if(distintos.length)msg+='La nube y este navegador tienen valores distintos en '+cuentaDatos(distintos.length)+'.\nSi otra persona los cambió después de que abrieras esta página, al publicar se sobrescribirán con los valores de este navegador. Si no estás seguro, cancela y avisa a la otra persona.\n\n';
-  let titulo='Publicar todo',boton='Publicar';
-  if(faltan.length){
-   titulo='Atención: se borrarán datos';boton='Publicar y borrar datos';
-   msg+='⚠ La nube tiene '+faltan.length+' dato'+(faltan.length===1?'':'s')+' que este navegador NO tiene.\nSi publicas, se eliminarán de la nube:\n\n'+listaClaves(faltan)+'\n\n';
-   msg+='Antes de publicar se descargará una copia de la nube. Si no esperabas borrar esos datos, cancela y publica desde el navegador que los tenga.';
-  }else if(prevKeys.length){
-   boton='Descargar copia y publicar';
-   msg+='Se descargará una copia de la nube y después se sustituirá por el contenido de este navegador.';
-  }else{
-   msg+='La nube está vacía. Se publicará el contenido de este navegador.';
-  }
-  askConfirm(msg,()=>ejecutarPublicacion(keys,prev),boton,titulo);
+   if(ajenos)avisoNube();
+  },e=>console.warn('No se pudo vigilar la nube:',e));
  }
  function ui(u){const b=document.getElementById('authbtn'),w=document.getElementById('authwho');if(!b)return;b.textContent=u?'Salir':'Entrar';w.textContent=u?(u.displayName||u.email||''):'';w.title=u?(u.email||''):''}
  async function revisar(u){
@@ -1242,13 +1223,14 @@ requestAnimationFrame(frame);
   try{await cargaP;const s=await db.doc('editors/'+u.uid).get();editor=s.exists}catch(e){editor=false}
   if(typeof setEditor==='function')setEditor(editor);
   if(!editor&&!avisado){avisado=true;alert('Tu cuenta no tiene permisos de edición.\n\nUID: '+u.uid+'\n\nPide que añadan ese UID a la colección "editors" de Firestore.')}
-  else if(editor&&cargaOk&&!docExiste&&!pidiendo){pidiendo=true;publicar()}
+  if(editor&&Object.keys(pend).length)flush();
   ui(u);
  }
+ cargaP.then(()=>iniciarVigilancia(),()=>iniciarVigilancia());
  auth.onAuthStateChanged(revisar);
  document.getElementById('authbtn').addEventListener('click',()=>{if(auth.currentUser){auth.signOut()}else{const p=new firebase.auth.GoogleAuthProvider();auth.signInWithPopup(p).catch(e=>alert('No se pudo iniciar sesión: '+e.message))}});
- document.getElementById('pubb').addEventListener('click',publicar);
- window.NUBE={guardar,borrar,syncable,subirImagen,publicar,activo:()=>ready&&editor};
+ document.getElementById('cloudNoticeOk').addEventListener('click',()=>{const el=document.getElementById('cloudNotice');if(el)el.hidden=true});
+ window.NUBE={guardar,borrar,syncable,subirImagen,flush,activo:()=>ready&&editor};
 })();
 </script>
 </body>
