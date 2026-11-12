@@ -1195,12 +1195,22 @@ requestAnimationFrame(frame);
   }
   const size=JSON.stringify(datos).length;
   if(size>900000)return alert('Demasiado contenido para un solo documento ('+Math.round(size/1024)+' KB). La nube NO se ha modificado.'+copia);
-  try{const s=await docRef().get({source:'server'}),actual=(s.data()&&s.data().datos)||{};if(!mismosDatos(prev,actual))return alert('La nube cambió mientras preparabas la publicación. No se ha modificado nada; vuelve a intentarlo.'+copia)}catch(e){return alert('No se pudo comprobar de nuevo la nube. Publicación cancelada para evitar perder datos.'+copia)}
-  try{await docRef().set({datos,actualizado:FV.serverTimestamp()});docExiste=true;alert('Publicado: '+cuentaDatos(n)+' ('+Math.round(size/1024)+' KB).'+(copia||'\n\nNo había datos previos en la nube.'))}catch(e){alert('No se pudo publicar: '+e.message+'\n\nLa nube no se ha sustituido.'+copia)}
+  try{
+   await db.runTransaction(async tx=>{
+    const s=await tx.get(docRef()),actual=(s.data()&&s.data().datos)||{};
+    if(!mismosDatos(prev,actual)){const err=new Error('ENOSI_NUBE_CAMBIADA');err.code='enosi-nube-cambiada';throw err}
+    tx.set(docRef(),{datos,actualizado:FV.serverTimestamp()});
+   });
+   docExiste=true;alert('Publicado: '+cuentaDatos(n)+' ('+Math.round(size/1024)+' KB).'+(copia||'\n\nNo había datos previos en la nube.'));
+  }catch(e){
+   if((e&&e.code==='enosi-nube-cambiada')||String(e&&e.message||'').indexOf('ENOSI_NUBE_CAMBIADA')>=0)return alert('La nube cambió mientras preparabas la publicación. No se ha modificado nada; vuelve a intentarlo.'+copia);
+   alert('No se pudo publicar: '+e.message+'\n\nLa nube no se ha sustituido.'+copia)
+  }
  }
  async function publicar(){
   if(!editor)return alert('Inicia sesión como editor para publicar.');
   await cargaP;
+  await flush();
   const keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keyOk(k))keys.push(k)}}catch(e){}
   if(!keys.length)return alert('No hay datos que publicar.');
   let prev={};
@@ -1208,7 +1218,9 @@ requestAnimationFrame(frame);
   const prevKeys=Object.keys(prev).filter(keyOk);
   const faltan=prevKeys.filter(k=>keys.indexOf(k)<0);
   const nuevos=keys.filter(k=>prevKeys.indexOf(k)<0);
+  const distintos=keys.filter(k=>prevKeys.indexOf(k)>=0&&prev[k]!==localStorage.getItem(k));
   let msg='Nube: '+cuentaDatos(prevKeys.length)+'.\nEste navegador: '+cuentaDatos(keys.length)+' ('+nuevos.length+' nuevo'+(nuevos.length===1?'':'s')+').\n\n';
+  if(distintos.length)msg+='La nube y este navegador tienen valores distintos en '+cuentaDatos(distintos.length)+'.\nSi otra persona los cambió después de que abrieras esta página, al publicar se sobrescribirán con los valores de este navegador. Si no estás seguro, cancela y avisa a la otra persona.\n\n';
   let titulo='Publicar todo',boton='Publicar';
   if(faltan.length){
    titulo='Atención: se borrarán datos';boton='Publicar y borrar datos';
