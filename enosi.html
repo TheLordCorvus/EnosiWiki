@@ -753,18 +753,23 @@ document.getElementById('confirmNo').addEventListener('click',()=>closeConfirm(f
 function loadCustom(k){try{const a=JSON.parse(localStorage.getItem('enosi-custom-'+k)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function saveCustom(k,a){try{localStorage.setItem('enosi-custom-'+k,JSON.stringify(a));return true}catch(e){return false}}
 let shown=-1;
-const MAIN_IMG=new Set(['linea','magnus','planos','elementos','naciones','criaturas','artefactos']);
+const IMG_GO={
+ root:new Set(['linea','magnus','planos','elementos','naciones','criaturas','artefactos']),
+ magnus:new Set(['oculatus','heroes','ascendidos','cancer','shuilings','paises']),
+ criaturas:new Set(['dragones'])
+};
+function canEditImg(n){if(!n||!n.go)return false;if(view==='artefactos')return true;const s=IMG_GO[view];return !!(s&&s.has(n.go))}
 function say(i){if(i>=0&&!NODES[i])i=-1;shown=i;measInfo();const hint=isOrion()?'Toca una estrella para explorarla.':isVacio()?'Ficha de lectura.':'Toca una placa del caparazón para explorarla.';const bb=(view!=='root')?'<button class="backbtn" type="button">← Volver</button>':'';const shell=!isOrion()&&!isVacio()&&view!=='root'&&freeCells().length>0&&EDITOR;const ab=shell?'<button class="addbtn" type="button">'+(picking?'✕ Cancelar':'＋ Añadir')+'</button>':'';
  const db=(shell&&picking)?'<button class="delbtn" type="button">'+(deleting?'✓ Listo':'－ Eliminar')+'</button>':'';
  const ph=(picking&&deleting&&i>=0&&NODES[i]&&!NODES[i].uid)?'Placa original del caparazón: no se puede eliminar.':(picking?(deleting?'Elige la placa propia a eliminar.':'Elige una placa vacía resaltada.'):hint);
  if(i<0){info.innerHTML=bb+ab+db+'<b>'+VIEWS[view].title+'</b><span>'+ph+'</span>';return}const n=NODES[i],blocked=picking&&deleting&&!n.uid;
  const im=safeImg(n.img);
- info.innerHTML=bb+ab+db+'<b style="color:'+safeColor(n.color)+'">'+escHtml(String(n.name))+'</b><span>'+escHtml(hoverText(n))+'</span>'+(blocked?'<span class="go">Placa original del caparazón: no se puede eliminar.</span>':n.go?'<span class="go">Clic para entrar</span>':n.detail?'<span class="go">Clic para abrir ficha</span>':'')+((EDITOR&&view==='root'&&n.go&&MAIN_IMG.has(n.go))?'<span class="go">Clic derecho: cambiar ilustración</span>':'')+'<div class="art">'+(im?'<img alt="'+attr(n.name)+'" src="'+im+'">':'<span>'+(EDITOR?'Ilustración<br>clic para añadir':'Sin ilustración')+'</span>')+'</div>'}
+ info.innerHTML=bb+ab+db+'<b style="color:'+safeColor(n.color)+'">'+escHtml(String(n.name))+'</b><span>'+escHtml(hoverText(n))+'</span>'+(blocked?'<span class="go">Placa original del caparazón: no se puede eliminar.</span>':n.go?'<span class="go">Clic para entrar</span>':n.detail?'<span class="go">Clic para abrir ficha</span>':'')+((EDITOR&&canEditImg(n))?'<span class="go">Clic derecho: cambiar ilustración</span>':'')+'<div class="art">'+(im?'<img alt="'+attr(n.name)+'" src="'+im+'">':'<span>'+(EDITOR?'Ilustración<br>clic para añadir':'Sin ilustración')+'</span>')+'</div>'}
 function zoomBy(r){const z0=cam.z,z1=Math.max(1,Math.min(4,z0*r));if(Math.abs(z1-z0)<.001)return;const mx=W/2,my=H/2;const px=(mx-cam.fx*(1-z0))/z0,py=(my-cam.fy*(1-z0))/z0;cam.z=z1;cam.tz=z1;if(z1>1.001){cam.fx=(mx-px*z1)/(1-z1);cam.fy=(my-py*z1)/(1-z1)}freeCam=true}
 function zoomFit(){cam.z=1;cam.tz=1;cam.fx=cx;cam.fy=cy;freeCam=true}
-function editMainImageAt(i){
-  if(i<0||!EDITOR||view!=='root')return false;
-  const n=NODES[i];if(!n||!MAIN_IMG.has(n.go))return false;
+function editNodeImageAt(i){
+  if(i<0||!EDITOR)return false;
+  const n=NODES[i];if(!canEditImg(n))return false;
   hover=i;pin=i;say(i);openDetail(i);setEditing(true,false);return true;
 }
 function activateAt(e){
@@ -813,7 +818,7 @@ cv.addEventListener('pointercancel',e=>endTouch(e,false));
 cv.addEventListener('contextmenu',e=>{
  if(!EDITOR||trans||!detail.hidden||picking)return;
  if(!document.getElementById('confirmbox').hidden||!document.getElementById('addbox').hidden)return;
- if(!editMainImageAt(pick(e)))return;
+ if(!editNodeImageAt(pick(e)))return;
  e.preventDefault();
 });
 document.getElementById('zin').addEventListener('click',()=>zoomBy(1.35));
